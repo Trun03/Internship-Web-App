@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="Intern_prjModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityType Name="Cauhinh">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="Chip" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="RAM" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="HDD" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="SSD" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="Main" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Serials" Relationship="Self.FK__Serial__id_Ch__6477ECF3" FromRole="Cauhinh" ToRole="Serial" />
+  </EntityType>
+  <EntityType Name="Don_vi">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="namepj" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Phong_ban" Relationship="Self.FK__Phong_ban__id_do__693CA210" FromRole="Don_vi" ToRole="Phong_ban" />
+  </EntityType>
+  <EntityType Name="Goithau">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="idprj" Type="Int32" />
+    <Property Name="name" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Pro" Relationship="Self.FK__Goithau__idprj__5812160E" FromRole="Goithau" ToRole="Pro" />
+    <NavigationProperty Name="Thietbis" Relationship="Self.FK__Thietbi__id_goit__5AEE82B9" FromRole="Goithau" ToRole="Thietbi" />
+  </EntityType>
+  <EntityType Name="Phong_ban">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="id_donvi" Type="Int32" />
+    <Property Name="name" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="Addsress" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Don_vi" Relationship="Self.FK__Phong_ban__id_do__693CA210" FromRole="Phong_ban" ToRole="Don_vi" />
+  </EntityType>
+  <EntityType Name="Pro">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="namepj" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Goithaus" Relationship="Self.FK__Goithau__idprj__5812160E" FromRole="Pro" ToRole="Goithau" />
+  </EntityType>
+  <EntityType Name="Serial">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="id_Tb" Type="Int32" />
+    <Property Name="id_Ch" Type="Int32" />
+    <Property Name="SerialNumber" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="Mathietbi" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <NavigationProperty Name="Cauhinh" Relationship="Self.FK__Serial__id_Ch__6477ECF3" FromRole="Serial" ToRole="Cauhinh" />
+    <NavigationProperty Name="Thietbi" Relationship="Self.FK__Serial__id_Tb__6383C8BA" FromRole="Serial" ToRole="Thietbi" />
+  </EntityType>
+  <EntityType Name="Thietbi">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="name" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="description" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="Mathietbi" Type="String" MaxLength="255" FixedLength="false" Unicode="false" />
+    <Property Name="id_goithau" Type="Int32" />
+    <NavigationProperty Name="Goithau" Relationship="Self.FK__Thietbi__id_goit__5AEE82B9" FromRole="Thietbi" ToRole="Goithau" />
+    <NavigationProperty Name="Serials" Relationship="Self.FK__Serial__id_Tb__6383C8BA" FromRole="Thietbi" ToRole="Serial" />
+  </EntityType>
+  <Association Name="FK__Serial__id_Ch__6477ECF3">
+    <End Role="Cauhinh" Type="Self.Cauhinh" Multiplicity="0..1" />
+    <End Role="Serial" Type="Self.Serial" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Cauhinh">
+        <PropertyRef Name="id" />
+      </Principal>
+      <Dependent Role="Serial">
+        <PropertyRef Name="id_Ch" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__Phong_ban__id_do__693CA210">
+    <End Role="Don_vi" Type="Self.Don_vi" Multiplicity="0..1" />
+    <End Role="Phong_ban" Type="Self.Phong_ban" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Don_vi">
+        <PropertyRef Name="id" />
+      </Principal>
+      <Dependent Role="Phong_ban">
+        <PropertyRef Name="id_donvi" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__Goithau__idprj__5812160E">
+    <End Role="Pro" Type="Self.Pro" Multiplicity="0..1" />
+    <End Role="Goithau" Type="Self.Goithau" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Pro">
+        <PropertyRef Name="id" />
+      </Principal>
+      <Dependent Role="Goithau">
+        <PropertyRef Name="idprj" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__Thietbi__id_goit__5AEE82B9">
+    <End Role="Goithau" Type="Self.Goithau" Multiplicity="0..1" />
+    <End Role="Thietbi" Type="Self.Thietbi" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Goithau">
+        <PropertyRef Name="id" />
+      </Principal>
+      <Dependent Role="Thietbi">
+        <PropertyRef Name="id_goithau" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <Association Name="FK__Serial__id_Tb__6383C8BA">
+    <End Role="Thietbi" Type="Self.Thietbi" Multiplicity="0..1" />
+    <End Role="Serial" Type="Self.Serial" Multiplicity="*" />
+    <ReferentialConstraint>
+      <Principal Role="Thietbi">
+        <PropertyRef Name="id" />
+      </Principal>
+      <Dependent Role="Serial">
+        <PropertyRef Name="id_Tb" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="Intern_prjEntities" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="Cauhinhs" EntityType="Self.Cauhinh" />
+    <EntitySet Name="Don_vi" EntityType="Self.Don_vi" />
+    <EntitySet Name="Goithaus" EntityType="Self.Goithau" />
+    <EntitySet Name="Phong_ban" EntityType="Self.Phong_ban" />
+    <EntitySet Name="Pros" EntityType="Self.Pro" />
+    <EntitySet Name="Serials" EntityType="Self.Serial" />
+    <EntitySet Name="Thietbis" EntityType="Self.Thietbi" />
+    <AssociationSet Name="FK__Serial__id_Ch__6477ECF3" Association="Self.FK__Serial__id_Ch__6477ECF3">
+      <End Role="Cauhinh" EntitySet="Cauhinhs" />
+      <End Role="Serial" EntitySet="Serials" />
+    </AssociationSet>
+    <AssociationSet Name="FK__Phong_ban__id_do__693CA210" Association="Self.FK__Phong_ban__id_do__693CA210">
+      <End Role="Don_vi" EntitySet="Don_vi" />
+      <End Role="Phong_ban" EntitySet="Phong_ban" />
+    </AssociationSet>
+    <AssociationSet Name="FK__Goithau__idprj__5812160E" Association="Self.FK__Goithau__idprj__5812160E">
+      <End Role="Pro" EntitySet="Pros" />
+      <End Role="Goithau" EntitySet="Goithaus" />
+    </AssociationSet>
+    <AssociationSet Name="FK__Thietbi__id_goit__5AEE82B9" Association="Self.FK__Thietbi__id_goit__5AEE82B9">
+      <End Role="Goithau" EntitySet="Goithaus" />
+      <End Role="Thietbi" EntitySet="Thietbis" />
+    </AssociationSet>
+    <AssociationSet Name="FK__Serial__id_Tb__6383C8BA" Association="Self.FK__Serial__id_Tb__6383C8BA">
+      <End Role="Thietbi" EntitySet="Thietbis" />
+      <End Role="Serial" EntitySet="Serials" />
+    </AssociationSet>
+  </EntityContainer>
+</Schema>

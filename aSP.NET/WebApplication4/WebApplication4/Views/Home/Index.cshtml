@@ -1,0 +1,149 @@
+﻿@model IEnumerable<WebApplication4.Pro> 
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Application</title>
+    <style>
+        /* Reset CSS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        /* Header Styles */
+        .header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header__title {
+            margin: 0;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            background-color: #555;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .navigation__list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navigation__item {
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+            .navigation__item a {
+                color: #fff;
+                text-decoration: none;
+                padding: 5px 10px;
+            }
+
+        /* Main Content Styles */
+        .content {
+            padding: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+            .btn:hover {
+                background-color: #0056b3;
+            }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+            .table th,
+            .table td {
+                padding: 10px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+
+        /* Footer Styles */
+        .footer {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1 class="header__title">Project's list</h1>
+    </header>
+
+    <nav class="navigation">
+        <ul class="navigation__list">
+            <li class="navigation__item"><a href="/">Home</a></li>
+            <li class="navigation__item"><a href="/Home/Create">Create</a></li>
+            <!-- Add more navigation items as needed -->
+        </ul>
+    </nav>
+
+    <main class="content">
+        <h2>Index</h2>
+
+        <p>
+            <a href="/Home/Create" class="btn">Create New</a>
+        </p>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name of the Project</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.namepj)</td> 
+                        <td>@Html.DisplayFor(modelItem => item.description)</td>
+                        <td>
+                            <a href="/Home/Edit/@item.id" class="btn btn-primary">Edit</a>
+                            <a href="/Home/Detail/@item.id" class="btn btn-info">Details</a>
+                            <a href="/Home/Delete/@item.id" class="btn btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </main>
+
+    <footer class="footer">
+        &copy; 2024 Web Application. All rights reserved.
+    </footer>
+</body>
+</html>

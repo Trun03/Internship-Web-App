@@ -1,0 +1,16 @@
+﻿@model int?
+
+@(Html.Kendo().DropDownList()
+    .Name("id_donvi")
+    .DataTextField("name")
+    .DataValueField("id")
+    .OptionLabel("Select Unit")
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("PopulateUnitList", "Users");
+        });
+    })
+    .Value(Model.HasValue ? Model.ToString() : null)
+)

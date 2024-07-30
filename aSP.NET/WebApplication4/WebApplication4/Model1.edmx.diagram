@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="ae1630bfea1d44c986c8a9e303bd80a2" Name="Diagram1">
+        <EntityTypeShape EntityType="Intern_prjModel.Cauhinh" Width="1.5" PointX="5.25" PointY="5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Intern_prjModel.Don_vi" Width="1.5" PointX="7.75" PointY="5.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="Intern_prjModel.Goithau" Width="1.5" PointX="3" PointY="1.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="Intern_prjModel.Phong_ban" Width="1.5" PointX="10" PointY="4.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Intern_prjModel.Pro" Width="1.5" PointX="0.75" PointY="1.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="Intern_prjModel.Serial" Width="1.5" PointX="7.5" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="Intern_prjModel.Thietbi" Width="1.5" PointX="5.25" PointY="1" IsExpanded="true" />
+        <AssociationConnector Association="Intern_prjModel.FK__Serial__id_Ch__6477ECF3" ManuallyRouted="false" />
+        <AssociationConnector Association="Intern_prjModel.FK__Phong_ban__id_do__693CA210" ManuallyRouted="false" />
+        <AssociationConnector Association="Intern_prjModel.FK__Goithau__idprj__5812160E" ManuallyRouted="false" />
+        <AssociationConnector Association="Intern_prjModel.FK__Thietbi__id_goit__5AEE82B9" ManuallyRouted="false" />
+        <AssociationConnector Association="Intern_prjModel.FK__Serial__id_Tb__6383C8BA" ManuallyRouted="false" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

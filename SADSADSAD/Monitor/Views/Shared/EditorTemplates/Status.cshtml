@@ -1,0 +1,7 @@
+﻿@model string
+
+@(Html.Kendo().DropDownListFor(m => m)
+    .Name("Status")
+    .BindTo(new List<string> { "available", "exported" })
+    .OptionLabel("Select Status")
+)

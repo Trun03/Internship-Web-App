@@ -1,0 +1,63 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Dashboard</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item active">Thông tin chung</li>
+    </ol>
+    <div class="row">
+        <div class="card mb-4 col-3">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Chọn khoảng thời gian
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().DateRangePicker()
+                  .Name("daterangepicker")
+                  .Range(r=>r.Start(DateTime.Now).End(DateTime.Now.AddDays(10)))
+                  .HtmlAttributes(new { style = "width: 100%", title = "daterangepicker" })
+                )
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Button()
+                .Name("textButton")
+                .HtmlAttributes( new {type = "button"} )
+                .Content("Chọn"))
+            </div>
+        </div>
+        <div class="mb-4 col-1">
+
+        </div>
+        <div class="card mb-4 col-8">
+            <div class="card-body">
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    //$(document).ready(function () {
+
+    //    var today = new Date();
+    //    var date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    //    var time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+    //    var current = date + 'T' + time;
+    //    var zero = date + 'T' + "00:00:00";
+
+    //    $("#reportViewer1").telerik_ReportViewer({ reportSource: { parameters: { fromDate: zero, toDate: current } } });
+    //})
+    //$("#textButton").kendoButton({
+    //    click: function (e) {
+    //        var range = $("#daterangepicker").data("kendoDateRangePicker").range();
+    //        var from = kendo.toString(range.start, "yyyy-MM-ddTHH:mm:ss");
+    //        var to = kendo.toString(range.end, "yyyy-MM-ddTHH:mm:ss");
+    //        alert("Start - " + from + " End - " + to);
+    //        var viewer = $("#reportViewer1").data("telerik_ReportViewer");
+    //        viewer.reportSource({
+    //            report: viewer.reportSource().report,
+    //            parameters: { fromDate: from, toDate: to }
+    //        });
+    //    }
+    //});
+</script>
+

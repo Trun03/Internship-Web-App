@@ -1,0 +1,80 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="Intern_prjModelStoreContainer" CdmEntityContainer="Intern_prjEntities">
+    <EntitySetMapping Name="Cauhinhs">
+      <EntityTypeMapping TypeName="Intern_prjModel.Cauhinh">
+        <MappingFragment StoreEntitySet="Cauhinh">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="Chip" ColumnName="Chip" />
+          <ScalarProperty Name="RAM" ColumnName="RAM" />
+          <ScalarProperty Name="HDD" ColumnName="HDD" />
+          <ScalarProperty Name="SSD" ColumnName="SSD" />
+          <ScalarProperty Name="Main" ColumnName="Main" />
+          <ScalarProperty Name="description" ColumnName="description" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Don_vi">
+      <EntityTypeMapping TypeName="Intern_prjModel.Don_vi">
+        <MappingFragment StoreEntitySet="Don_vi">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="namepj" ColumnName="namepj" />
+          <ScalarProperty Name="description" ColumnName="description" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Goithaus">
+      <EntityTypeMapping TypeName="Intern_prjModel.Goithau">
+        <MappingFragment StoreEntitySet="Goithau">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="idprj" ColumnName="idprj" />
+          <ScalarProperty Name="name" ColumnName="name" />
+          <ScalarProperty Name="description" ColumnName="description" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Phong_ban">
+      <EntityTypeMapping TypeName="Intern_prjModel.Phong_ban">
+        <MappingFragment StoreEntitySet="Phong_ban">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="id_donvi" ColumnName="id_donvi" />
+          <ScalarProperty Name="name" ColumnName="name" />
+          <ScalarProperty Name="Addsress" ColumnName="Addsress" />
+          <ScalarProperty Name="description" ColumnName="description" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Pros">
+      <EntityTypeMapping TypeName="Intern_prjModel.Pro">
+        <MappingFragment StoreEntitySet="Pro">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="namepj" ColumnName="namepj" />
+          <ScalarProperty Name="description" ColumnName="description" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Serials">
+      <EntityTypeMapping TypeName="Intern_prjModel.Serial">
+        <MappingFragment StoreEntitySet="Serial">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="id_Tb" ColumnName="id_Tb" />
+          <ScalarProperty Name="id_Ch" ColumnName="id_Ch" />
+          <ScalarProperty Name="SerialNumber" ColumnName="SerialNumber" />
+          <ScalarProperty Name="description" ColumnName="description" />
+          <ScalarProperty Name="Mathietbi" ColumnName="Mathietbi" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Thietbis">
+      <EntityTypeMapping TypeName="Intern_prjModel.Thietbi">
+        <MappingFragment StoreEntitySet="Thietbi">
+          <ScalarProperty Name="id" ColumnName="id" />
+          <ScalarProperty Name="name" ColumnName="name" />
+          <ScalarProperty Name="description" ColumnName="description" />
+          <ScalarProperty Name="Mathietbi" ColumnName="Mathietbi" />
+          <ScalarProperty Name="id_goithau" ColumnName="id_goithau" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>

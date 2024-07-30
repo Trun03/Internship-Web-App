@@ -1,0 +1,77 @@
+﻿@using Model.EF
+@using Kendo.Mvc
+@{
+    ViewBag.Title = "Storage";
+    Layout = "~/Views/Shared/_Layout5.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1>Storage</h1>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Store
+            </div>
+            <div class="card-body">
+                <input id="projectSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Grid<Model.EF.Storage>()
+                    .Name("gridStore")
+                    .Columns(columns =>
+                    {
+                        columns.Bound(p => p.Id).Title("ID");
+                        columns.Bound(p => p.Device_Name).Title("Device name");
+                        columns.Bound(p => p.Serial_No).Title("Serial Number");
+                        columns.Bound(p => p.Status)
+                               .Title("Status")
+                               .EditorTemplateName("Status"); 
+                        columns.Bound(p => p.ImportDate).Title("Import Date").Format("{0:yyyy-MM-dd}"); // New column
+                        columns.Command(command =>
+                        {
+                            command.Edit();
+                            command.Destroy();
+                        }).Title("Actions").Width(200);
+                    })
+                    .Sortable()
+                    .Navigatable()
+                    .Filterable()
+                    .ToolBar(toolbar => toolbar.Create())
+                    .Editable(editable => editable.Mode(GridEditMode.InLine)) 
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(model =>
+                        {
+                            model.Id(p => p.Id);
+                            model.Field(p => p.Id).Editable(false);
+                        })
+                        .Create(create => create.Action("CreatePro", "Storage"))
+                        .Read(read => read.Action("GetDevice", "Storage"))
+                        .Update(update => update.Action("UpdatePro", "Storage"))
+                        .Destroy(destroy => destroy.Action("DeletePro", "Storage"))
+                    )
+                )
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var grid = $("#gridStore").data("kendoGrid");
+
+        $("#projectSearchInput").on("keyup", function () {
+            var value = $(this).val();
+            grid.dataSource.filter({
+                logic: "or",
+                filters: [
+                    { field: "Device_Name", operator: "contains", value: value },
+                    { field: "Serial_No", operator: "contains", value: value }
+                ]
+            });
+        });
+    });
+</script>

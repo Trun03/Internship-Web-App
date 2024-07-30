@@ -1,0 +1,496 @@
+﻿@using Model.EF
+@using Kendo.Mvc
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout3.cshtml";
+}
+
+@using Kendo.Mvc.UI
+
+
+<div id="notificationStorage" class="notification-store">
+    <i class="fas fa-envelope"></i>
+</div>
+
+
+<!-- Notification Panel -->
+<div id="notificationPanelStore" class="notification-panelstore">
+    <div id="notificationContentstorage"></div>
+</div>
+
+
+<div class="container-fluid px-4">
+    <h1>Users demands</h1>
+</div>
+
+<!-- Notification 2 -->
+<div id="notificationIcon2" class="notification-icon2">
+    <i class="fas fa-bell"></i>
+</div>
+<div id="notificationPanel2" class="notification-panel2">
+    <div id="notificationContent2"></div>
+</div>
+
+
+
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i> Demand
+            </div>
+            <div class="card-body">
+                <input id="projectSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Grid<Customer>()
+                    .Name("gridCustomer")
+                    .Columns(columns => {
+                        columns.Bound(p => p.ID).Title("ID");
+                        columns.Bound(p => p.Name).Title("Name");
+                        columns.Bound(p => p.Unit).Title("Unit");
+                        columns.Bound(p => p.Department).Title("Department");
+                        columns.Bound(p => p.Description).Title("Description");
+                        columns.Command(command => {
+                            command.Custom("Approve").Text("Approve").HtmlAttributes(new { @class = "btn btn-success btn-sm btn-approve" });
+                            command.Custom("Deny").Text("Deny").HtmlAttributes(new { @class = "btn btn-danger btn-sm btn-deny" });
+                            command.Custom("SendRequest").Text("Send request").HtmlAttributes(new { @class = "btn btn-primary btn-sm send-request" });
+                            command.Destroy();
+                        }).Title("Actions").Width(250).HtmlAttributes(new { @class = "action-buttons" });
+                    })
+                    .Sortable()
+                    .Pageable(pageable => pageable
+                        .Refresh(true)
+                        .PageSizes(true)
+                        .ButtonCount(5))
+                    .Filterable(ftb => ftb.Mode(GridFilterMode.Row))
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(model => {
+                            model.Id(p => p.ID);
+                            model.Field(p => p.ID).Editable(false);
+                        })
+                        .PageSize(10)
+                        .Read(read => read.Action("GetCusData", "Customer"))
+                        .Destroy(destroy => destroy.Action("DeleteCus", "Customer"))
+                    )
+                )
+            </div>
+        </div>
+    </div>
+</div>
+<!-- JavaScript -->
+@*OverView Request*@
+<script>
+    $(document).ready(function () {
+        // Tái tạo thông báo từ localStorage khi trang được load
+        var savedNotifications = localStorage.getItem('notifications');
+        if (savedNotifications) {
+            $('#notificationContent').html(savedNotifications);
+            $('#notificationPanel').show();
+        }
+
+        // Xử lý sự kiện khi nhấp vào nút "Send request"
+        $('#gridCustomer').on('click', '.send-request', function () {
+            var dataItem = $('#gridCustomer').data('kendoGrid').dataItem($(this).closest('tr'));
+            var description = dataItem.Description;
+            var user = dataItem.Name;
+            var id = dataItem.ID;
+            // Hiển thị thông báo và lưu vào localStorage
+            var notificationHtml = '<div class="notification-item">New request from user ' + user + ',' + ' ID: ' + '' + id + ':' + description + '<button class="btn btn-sm btn-success no-button" onclick="sendToST()">Decline</button><button class="btn btn-sm btn-warning delete-button">Delete</button><button class="btn btn-sm btn-warning storage-button">Send to storage</button></div>';
+            $('#notificationContent').append(notificationHtml);
+            $('#notificationPanel').show();
+
+            // Lưu thông báo vào localStorage
+            var currentNotifications = localStorage.getItem('notifications') || '';
+            localStorage.setItem('notifications', currentNotifications + notificationHtml);
+        });
+
+        // Xóa thông báo khi nhấp vào nút "Delete"
+        $('#notificationContent').on('click', '.delete-button', function () {
+            $(this).closest('.notification-item').remove();
+
+            // Cập nhật lại localStorage
+            var currentNotifications = '';
+            $('#notificationContent .notification-item').each(function () {
+                currentNotifications += $(this).html();
+            });
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+    });
+
+
+
+    $(document).ready(function () {
+        // Tái tạo thông báo từ localStorage khi trang được load
+        var savedNotifications3 = localStorage.getItem('notifications3');
+        if (savedNotifications3) {
+            $('#notificationContent3').html(savedNotifications3);
+            $('#notificationPanel3').show();
+        }
+
+        // Xử lý sự kiện khi nhấp vào nút "Send to Storage"
+        $('#notificationContent').on('click', '.storage-button', function () {
+            var dataItem = $(this).closest('.notification-item').text().split(':')[1].trim();
+
+            // Hiển thị thông báo trong notificationPanel3 và lưu vào localStorage
+            var notificationHtml = '<div class="notification-item">' + dataItem + '</div>';
+            $('#notificationContent3').append(notificationHtml);
+            $('#notificationPanel3').show();
+
+            var currentNotifications3 = localStorage.getItem('notifications3') || '';
+            localStorage.setItem('notifications3', currentNotifications3 + notificationHtml);
+
+            // Xóa thông báo khỏi notificationPanel
+            $(this).closest('.notification-item').remove();
+            var currentNotifications = '';
+            $('#notificationContent .notification-item').each(function () {
+                currentNotifications += $(this).html();
+            });
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo của notificationPanel3
+        $('#notificationIcon3').click(function () {
+            $('#notificationPanel3').toggle();
+        });
+    });
+
+
+</script>
+
+@*Admin notification*@
+<script>
+    $(document).ready(function () {
+        // Tái tạo thông báo từ localStorage khi trang được load
+        var savedNotifications = localStorage.getItem('notifications');
+        if (savedNotifications) {
+            $('#notificationContent').html(savedNotifications);
+            $('#notificationPanel').show();
+        }
+
+        var savedDeclinedNotifications = localStorage.getItem('declinedNotifications');
+        if (savedDeclinedNotifications) {
+            $('#notificationContent2').html(savedDeclinedNotifications);
+            $('#notificationPanel2').show();
+        }
+
+        // Xóa thông báo khi nhấp vào nút "Delete"
+        $('#notificationContent').on('click', '.delete-button', function () {
+            $(this).closest('.notification-item').remove();
+
+            // Cập nhật lại localStorage
+            var currentNotifications = '';
+            $('#notificationContent .notification-item').each(function () {
+                currentNotifications += $(this).html();
+            });
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+
+        // Hàm hiển thị thông báo trên notification mới và lưu vào localStorage mới
+        function showNotification2(message) {
+            $('#notificationContent2').append('<div class="notification-item">' + message + '</div>');
+            $('#notificationPanel2').show();
+
+            var currentDeclinedNotifications = localStorage.getItem('declinedNotifications') || '';
+            localStorage.setItem('declinedNotifications', currentDeclinedNotifications + '<div class="notification-item">' + message + '</div>');
+        }
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo của notification mới
+        $('#notificationIcon2').click(function () {
+            $('#notificationPanel2').toggle();
+        });
+
+        // Xử lý sự kiện khi nhấp vào nút "No" ở notification-icon
+        $('#notificationContent').on('click', '.no-button', function () {
+            var description = $(this).closest('.notification-item').text().split(':')[1].trim();
+            var declinedNotification = '-Notification:' + description + ' have been declined';
+            showNotification2(declinedNotification);
+        });
+
+
+    });
+
+
+
+</script>
+
+@*Customer Request*@
+<script>
+    $(document).ready(function () {
+        // Khôi phục thông báo từ Local Storage khi trang được load
+        showNotificationsFromLocalStorage();
+
+        // Xử lý khi click vào nút Approve
+        $('#gridCustomer').on('click', '.btn-approve', function () {
+            var row = $(this).closest('tr');
+            var dataItem = $("#gridCustomer").data("kendoGrid").dataItem(row);
+            var description = dataItem.Description;
+            var notification = "-Notification: " + description + "<span style='color: green'> have been approved </span>";
+
+            saveAndDisplayNotification(notification);
+        });
+
+        // Xử lý khi click vào nút Deny
+        $('#gridCustomer').on('click', '.btn-deny', function () {
+            var row = $(this).closest('tr');
+            var dataItem = $("#gridCustomer").data("kendoGrid").dataItem(row);
+            var description = dataItem.Description;
+            var notification = "-Notification:" + description + "<span style='color: red'> have been denied </span>";
+
+            saveAndDisplayNotification(notification);
+        });
+
+
+
+        // Xử lý khi click vào biểu tượng thông báo
+        $('#notificationIcon').on('click', function () {
+            showNotificationsFromLocalStorage();
+        });
+
+        // Hàm hiển thị thông báo và lưu vào Local Storage
+        function saveAndDisplayNotification(notification) {
+            showNotification(notification);
+            saveNotificationToLocalStorage(notification);
+        }
+
+        // Hàm hiển thị thông báo
+        function showNotification(message) {
+            $('#notificationContent').append('<div>New Notification: ' + message + '</div>');
+            $('#notificationPanel').show();
+        }
+
+        // Hàm lưu thông báo vào Local Storage
+        function saveNotificationToLocalStorage(notification) {
+            var currentNotifications = localStorage.getItem('customNotifications') || '';
+            var updatedNotifications = currentNotifications + notification + ',';
+            localStorage.setItem('customNotifications', updatedNotifications);
+        }
+
+        // Hàm hiển thị thông báo từ Local Storage
+        function showNotificationsFromLocalStorage() {
+            var notifications = localStorage.getItem('customNotifications') || '';
+            var notificationsArray = notifications.split(',');
+            var content = '';
+            notificationsArray.forEach(function (notification) {
+                if (notification !== '') {
+                    content += '<div>' + notification + '</div>';
+                }
+            });
+            $('#notificationContent').html(content);
+            $('#notificationPanel').show();
+        }
+    });
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Xử lý khi click vào biểu tượng thông báo
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+    });
+</script>
+
+
+
+<!-- CSS -->
+<style>
+    /* CSS cho notification 1 */
+    .notification-icon2 {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 24px;
+        background-color: #434343;
+        color: white;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+    .notification-panel {
+        display: none;
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        z-index: 9999;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .notification-item {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .no-button {
+        background-color: green;
+        color: white;
+    }
+
+    .delete-button {
+        background-color: orange; /* Màu nền cam cho nút "Delete" */
+        color: white; /* Màu chữ trắng */
+    }
+
+    /* CSS cho notification 2 */
+    .notification-panel2 {
+        display: none;
+        position: fixed;
+        bottom: 670px;
+        right: 20px;
+        z-index: 9999;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+
+    .notification-icon2 {
+        position: fixed;
+        bottom: 820px;
+        right: 200px;
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 34px;
+        width: 60px;
+        height: 60px;
+    }
+
+    /* CSS cho các nút hành động */
+    .action-buttons {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+
+        .action-buttons .btn {
+            margin-right: 5px;
+        }
+
+    .notification-store {
+        position: fixed;
+        bottom: 820px;
+        right: 400px;
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 34px;
+        background-color: #007bff;
+        color: white;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+        .notification-store:hover {
+            background-color: #0056b3;
+        }
+
+    .notification-panelstore {
+        display: none;
+        position: fixed;
+        bottom: 670px;
+        right: 350px;
+        z-index: 9999;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 250px;
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 10px;
+        border-block-color: #007bff;
+    }
+</style>
+
+
+
+<script>
+    $(document).ready(function () {
+        var isNotificationPanelVisible = false;
+
+        // Hiển thị thông báo từ LocalStorage
+        var storedNotifications = JSON.parse(localStorage.getItem("Store")) || [];
+        if (storedNotifications.length > 0) {
+            displayNotifications(storedNotifications);
+        }
+
+        // Sự kiện khi nhấn nút "Send to Storage Department"
+        $("#griUser").on("click", ".k-grid-sendToStorage", function (e) {
+            e.preventDefault();
+
+            var grid = $("#griUser").data("kendoGrid");
+            var dataItem = grid.dataItem($(e.currentTarget).closest("tr"));
+
+            var deviceId = dataItem.id_thietbi;
+            var userName = dataItem.name;
+            var notification = `Device ID: ${deviceId} has been sent to User: ${userName}`;
+
+            // Lấy danh sách thông báo từ LocalStorage (nếu có)
+            var storedNotifications = JSON.parse(localStorage.getItem("Store")) || [];
+            // Thêm thông báo mới vào mảng
+            storedNotifications.push(notification);
+            // Lưu lại danh sách thông báo vào LocalStorage
+            localStorage.setItem("Store", JSON.stringify(storedNotifications));
+
+            // Hiển thị tất cả thông báo
+            displayNotifications(storedNotifications);
+        });
+
+        // Sự kiện click vào notificationStorage
+        $("#notificationStorage").click(function () {
+            toggleNotificationPanel();
+        });
+
+        // Hàm hiển thị/toggle panel thông báo
+        function toggleNotificationPanel() {
+            if (isNotificationPanelVisible) {
+                $("#notificationPanelStore").hide();
+            } else {
+                $("#notificationPanelStore").show();
+            }
+            isNotificationPanelVisible = !isNotificationPanelVisible;
+        }
+
+        // Hàm hiển thị tất cả thông báo
+        function displayNotifications(notifications) {
+            var notificationHtml = notifications.map(notification => `<div>${notification}</div>`).join("");
+            $("#notificationContentstorage").html(notificationHtml);
+            $("#notificationPanelStore").show();
+            isNotificationPanelVisible = true;
+        }
+    });
+</script>
+
+
+

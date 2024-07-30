@@ -1,0 +1,93 @@
+﻿@using Model.EF
+@using Kendo.Mvc
+@using Kendo.Mvc.UI
+@{
+    Layout = null;
+}
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout5.cshtml";
+}
+
+<html>
+<body>
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h1>Warranty Devices</h1>
+                    <i class="fas fa-table me-1"></i>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Select</th>
+                                <th>User Name</th>
+                                <th>User Department</th>
+                                <th>Unit</th>
+                                <th>Device Name</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="selectedDevicesInfo"></tbody>
+                    </table>
+
+                    <button id="clearButton" class="btn btn-secondary">Clear Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("clearButton").addEventListener("click", function () {
+            clearLocalStorage();
+            loadDataFromLocalStorage(); // Update the table immediately after clearing
+            alert("Local storage cleared and data reset.");
+        });
+
+        function loadDataFromLocalStorage() {
+            var savedData = localStorage.getItem("selectedDevicesInfo");
+
+            if (savedData) {
+                savedData = JSON.parse(savedData);
+
+                var selectedDevicesInfo = document.getElementById("selectedDevicesInfo");
+                selectedDevicesInfo.innerHTML = "";
+
+                savedData.devices.forEach(function (device) {
+                    if (device.action === "Warranty") {  // Filter condition
+                        var newRow = document.createElement("tr");
+                        newRow.innerHTML = "<td><input type='checkbox'></td><td>" + device.userName + "</td><td>" + device.userDepartment + "</td><td>" + device.unit + "</td><td>" + device.deviceName + "</td><td>" + device.action + "</td><td><button onclick='sendWarrantyNotification(\"" + device.deviceName + "\")'>Send</button><button>Finish</button></td>";
+                        selectedDevicesInfo.appendChild(newRow);
+                    }
+                });
+            }
+        }
+
+        function sendWarrantyNotification(deviceName) {
+            var notificationMessage = "Device " + deviceName + " is being Warranty.";
+
+            // Save the notification to local storage
+            var warandRe = localStorage.getItem("WarandRe") || [];
+            if (typeof warandRe === "string") {
+                warandRe = JSON.parse(warandRe);
+            }
+            warandRe.push(notificationMessage);
+            localStorage.setItem("WarandRe", JSON.stringify(warandRe));
+        }
+
+        function clearLocalStorage() {
+            localStorage.removeItem("selectedDevicesInfo");
+            localStorage.removeItem("WarandRe");
+        }
+
+        $("#notificationIconWar").on("click", function () {
+            $("#notificationPanelIconWar").toggle();
+        });
+
+        window.onload = loadDataFromLocalStorage;
+    </script>
+</body>
+</html>

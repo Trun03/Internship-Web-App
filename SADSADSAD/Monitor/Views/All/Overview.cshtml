@@ -1,0 +1,295 @@
+﻿@using Model.EF
+
+@using Kendo.Mvc.UI
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<!-- User's list -->
+<div>
+    <h2>User's list</h2>
+    @(Html.Kendo().Grid<User>()
+    .Name("grid")
+    .Columns(columns =>
+    {
+        columns.Bound(p => p.id).Title("ID");
+        columns.Bound(p => p.name).Title("User Name");
+        columns.ForeignKey(p => p.id_donvi, ViewBag.DonviList as SelectList, "Value", "Text").Title("Unit");
+        columns.ForeignKey(p => p.id_phongban, ViewBag.PhongbanList as SelectList, "Value", "Text").Title("Department");
+        columns.ForeignKey(p => p.id_thietbi, ViewBag.DeviceList as SelectList, "Value", "Text").Title("Device"); ;
+        columns.Bound(p => p.StartBorrowingDate).Title("Start Borrowing Date");
+    })
+    .Sortable()
+    .Pageable(pageable => pageable
+        .Refresh(true)
+        .PageSizes(true)
+        .ButtonCount(5))
+    .Filterable(ftb => ftb.Mode(GridFilterMode.Row))
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(10)
+        .Read(read => read.Action("GetUsers", "All"))
+    )
+)
+</div>
+
+<!-- Device's list -->
+<div>
+    <h2>Device's list</h2>
+    @(Html.Kendo().Grid<Model.EF.Device>()
+    .Name("griddevice")
+    .Columns(columns =>
+    {
+        columns.Bound(d => d.DeviceID).Title("ID");
+        columns.Bound(d => d.Name).Title("Device Name");
+        columns.Bound(d => d.Serial).Title("Serial");
+        columns.Bound(d => d.Model).Title("Model");
+        columns.Bound(d => d.Description).Title("Description");
+        columns.Bound(p => p.Status).Title("Status").EditorTemplateName("StatusDropDown");
+        columns.ForeignKey(d => d.SubProjectID, ViewBag.SubProjectList as SelectList, "Value", "Text").Title("SubProject");
+        columns.ForeignKey(d => d.SubProjectID, ViewBag.ProjectList as SelectList, "Value", "Text").Title("Project");
+    })
+    .Sortable()
+    .Pageable(pageable => pageable
+        .Refresh(true)
+        .PageSizes(true)
+        .ButtonCount(5))
+    .Filterable(ftb => ftb.Mode(GridFilterMode.Row))
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(10)
+        .Read(read => read.Action("GetDevices", "All"))
+    )
+)
+</div>
+
+
+@*Admin notification*@
+@*<script>
+    $(document).ready(function () {
+        // Tái tạo thông báo từ localStorage khi trang được load
+        var savedNotifications = localStorage.getItem('notifications');
+        if (savedNotifications) {
+            $('#notificationContent').html(savedNotifications);
+            $('#notificationPanel').show();
+        }
+
+        var savedDeclinedNotifications = localStorage.getItem('declinedNotifications');
+        if (savedDeclinedNotifications) {
+            $('#notificationContent2').html(savedDeclinedNotifications);
+            $('#notificationPanel2').show();
+        }
+
+        // Xóa thông báo khi nhấp vào nút "Delete"
+        $('#notificationContent').on('click', '.delete-button', function () {
+            $(this).closest('.notification-item').remove();
+
+            // Cập nhật lại localStorage
+            var currentNotifications = '';
+            $('#notificationContent .notification-item').each(function () {
+                currentNotifications += $(this).html();
+            });
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+
+        // Hàm hiển thị thông báo trên notification mới và lưu vào localStorage mới
+        function showNotification2(message) {
+            $('#notificationContent2').append('<div class="notification-item">' + message + '</div>');
+            $('#notificationPanel2').show();
+
+            var currentDeclinedNotifications = localStorage.getItem('declinedNotifications') || '';
+            localStorage.setItem('declinedNotifications', currentDeclinedNotifications + '<div class="notification-item">' + message + '</div>');
+        }
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo của notification mới
+        $('#notificationIcon2').click(function () {
+            $('#notificationPanel2').toggle();
+        });
+
+        // Xử lý sự kiện khi nhấp vào nút "No" ở notification-icon
+        $('#notificationContent').on('click', '.no-button', function () {
+            var description = $(this).closest('.notification-item').text().split(':')[1].trim();
+            var declinedNotification = '-Notification:' + description + ' have been declined';
+            showNotification2(declinedNotification);
+        });
+
+
+    });
+
+
+
+</script>*@
+
+
+<!-- CSS -->
+<style>
+    /* CSS cho các tiêu đề */
+    h2 {
+        font-size: 36px;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    /* CSS cho bảng */
+    .k-grid {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        .k-grid th,
+        .k-grid td {
+            padding: 10px;
+            border: 1px solid #434343; /* Màu xám đậm */
+            color: black; /* Màu chữ trắng */
+        }
+
+        /* CSS cho các tiêu đề bảng */
+        .k-grid th {
+            background-color: #434343; /* Màu nền */
+            color: white !important; /* Màu chữ */
+            padding: 10px; /* Khoảng cách bên trong */
+            border: 1px solid #434343; /* Viền */
+        }
+
+    .k-grid-header th.k-header > .k-link {
+        display: block;
+        min-height: 18px;
+        line-height: 18px;
+        margin: -.5em -.6em -.4em 0;
+        padding: .5em .6em .4em 0;
+        overflow: hidden;
+        color: white;
+        text-overflow: ellipsis;
+    }
+
+    /* CSS cho notification icon */
+    .notification-icon {
+        position: fixed;
+        bottom: 830px;
+        right: 20px;
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 24px;
+        background-color: #434343; /* Màu nền */
+        color: white;
+        width: 50px;
+        height: 50px; /* Chiều cao */
+        border-radius: 50%; /* Bo tròn */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+        .notification-icon:hover
+        background-color: #333; /* Màu nền khi di chuột qua */
+    }
+
+    .notification-icon i {
+        transform: translateY(1px); /* Dịch chuyển icon xuống 1px */
+    }
+
+    /* CSS cho notification panel */
+    .notification-panel {
+        display: none;
+        position: fixed;
+        bottom: 710px;
+        right: 20px;
+        z-index: 9999;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    /* CSS cho notification item */
+    .notification-item {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+        color: #333; /* Màu chữ */
+    }
+
+        .notification-item:hover {
+            background-color: #f2f2f2; /* Màu nền khi di chuột qua */
+        }
+
+    /* CSS cho các button trong notification */
+    .no-button, .delete-button {
+        background-color: transparent; /* Màu nền trong suốt */
+        color: #333; /* Màu chữ */
+        border: 1px solid #333; /* Viền */
+        padding: 5px 10px; /* Khoảng cách trong button */
+        margin-right: 5px; /* Khoảng cách với button khác */
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Hiệu ứng chuyển đổi */
+    }
+
+        .no-button:hover, .delete-button:hover {
+            background-color: #333; /* Màu nền khi di chuột qua */
+            color: #fff; /* Màu chữ khi di chuột qua */
+            border-color: #333; /* Màu viền khi di chuột qua */
+        }
+</style>
+
+
+<script>
+    $(document).ready(function () {
+        displayNotifications();
+
+        $("#sendButton").on("click", function () {
+            var selectedDevices = [];
+            $(".chkDevice:checked").each(function () {
+                var id = $(this).data("id");
+                var name = $(this).data("name");
+                var serial = $(this).data("serial");
+                selectedDevices.push({ id: id, name: name, serial: serial });
+            });
+
+            var project = $("#drlProject").data("kendoDropDownList").text();
+            var subProject = $("#drlSubproject").data("kendoDropDownList").text();
+
+            var distributeNotifications = localStorage.getItem("distributeNotifications") || "";
+            selectedDevices.forEach(function (device) {
+                distributeNotifications += device.name + ", Serial number: " + device.serial + ", Project: " + project + ", SubProject: " + subProject + "|";
+            });
+
+            localStorage.setItem("distributeNotifications", distributeNotifications);
+            displayNotifications();
+        });
+
+        $("#notificationdistribute").on("click", function () {
+            $("#notificationPaneldistribute").toggle();
+        });
+
+        function displayNotifications() {
+            var distributeNotifications = localStorage.getItem("distributeNotifications") || "";
+            var notificationList = $("#notificationList");
+            notificationList.empty();
+
+            if (distributeNotifications) {
+                var notificationArray = distributeNotifications.split("|");
+                notificationArray.forEach(function (message) {
+                    if (message) {
+                        notificationList.append("<li>" + message + "</li>");
+                    }
+                });
+            }
+        }
+    });
+
+</script>
+
+
+
+
+

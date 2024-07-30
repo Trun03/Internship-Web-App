@@ -1,0 +1,795 @@
+﻿@using Kendo.Mvc;
+@{
+    ViewBag.Title = "Custom";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<div class="col-sm-6">
+    <h1>Customer section</h1>
+    <div class="row-sm-6">
+        <div class="card mb-4">
+            @* Dropdownlist for Customer *@
+            <div class="card-body">
+                @(Html.Kendo().DropDownList()
+                    .Name("drlCus")
+                    .DataTextField("Name")
+                    .DataValueField("ID")
+                    .OptionLabel("Customer dropdownlist")
+                    .Filter("contains") 
+                    .Events(e =>
+                    {
+                        e.Change("onCusChange");
+                    })
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("PopulateCustomerList", "Ship");
+                        });
+                    })
+                )
+
+            </div>
+            @* Bảng Device *@
+            <div class="card-body">
+                @(Html.Kendo().Grid<Model.EF.Device>()
+                    .Name("gridDevice")
+                    .Columns(columns =>
+                    {
+                        columns.Template(@<text></text>).ClientTemplate("<input type='checkbox' class='chkDevice' />").Width(50);
+                        columns.Bound(p => p.DeviceID).Title("ID");
+                        columns.Bound(p => p.Name).Title("Device Name");
+                        columns.Bound(p => p.Description).Title("Description");
+                        columns.Bound(p => p.Serial).Title("Serial Number");
+                        columns.Bound(p => p.Model).Title("Model");
+                    })
+                    .Sortable()
+                    .Navigatable()
+                    .Filterable()
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(model =>
+                        {
+                            model.Id(p => p.DeviceID);
+                            model.Field(p => p.DeviceID).Editable(false);
+                        })
+                        .Read(read => read.Action("GetAllDevices", "Ship")) // Ensure the controller method filters by "Available" status
+                    )
+                )
+            </div>
+            <div class="card-footer">
+                <button id="sendButton" class="btn2 btn-primary" onclick="sendSelectedDevices()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-6">
+    <h1>Customer List</h1>
+    <div class="row-sm-6">
+        <div class="card mb-4">
+            <div class="card-header">
+            </div>
+            <div class="card-body">
+                <table id="customerList" class="table">
+                    <thead>
+                        <tr>
+                            <th>ID Customer</th>
+                            <th>Device Name</th>
+                            <th>Serial Number</th>
+                            <th>Customer Name</th>
+                            <th>Customer Department</th>
+                            <th>Customer Unit</th>
+                            <th style="width: 160px;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customerListBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        // Restore data from Local Storage when the page loads
+        restoreCustomerListFromLocalStorage();
+
+        // Event for dataBound in Kendo Grid
+        $("#gridDevice").data("kendoGrid").bind("dataBound", function (e) {
+            $(".chkDevice").prop("checked", false); // Reset checkboxes
+
+            // Restore hidden devices
+            restoreHiddenDevices();
+        });
+
+        // Restore selected devices from Local Storage
+        var selectedDevices = restoreSelectedDevicesFromLocalStorage();
+        $.each(selectedDevices, function (index, device) {
+            var row = $("#gridDevice").data("kendoGrid").tbody.find("tr[data-uid='" + device.uid + "']");
+            row.find(".chkDevice").prop("checked", true);
+        });
+    });
+
+    // Handle customer dropdown change event
+    function onCusChange() {
+        $("#gridCustomer").data("kendoGrid").dataSource.read();
+    }
+
+    // Gather customer info
+    function infoCustomer() {
+        var tempval = $("#drlCus").data("kendoDropDownList").value();
+        return { cusID: tempval };
+    }
+
+    // Function to save selected devices to Local Storage
+    function saveSelectedDevicesToLocalStorage(selectedDevices) {
+        localStorage.setItem("selectedDevices", JSON.stringify(selectedDevices));
+    }
+
+    // Function to restore selected devices from Local Storage
+    function restoreSelectedDevicesFromLocalStorage() {
+        var selectedDevices = JSON.parse(localStorage.getItem("selectedDevices")) || [];
+        return selectedDevices;
+    }
+
+    // Function to send selected devices to Customer's List
+    function sendSelectedDevices() {
+        var selectedDevices = [];
+        var customerid = $("#drlCus").data("kendoDropDownList").value();
+        var customerName = $("#drlCus").data("kendoDropDownList").text();
+        var customerUnit = $("#drlCus").data("kendoDropDownList").dataItem().Unit;
+        var customerDepartment = $("#drlCus").data("kendoDropDownList").dataItem().Department;
+
+        // Collect selected devices
+        $(".chkDevice:checked").each(function () {
+            var dataItem = $("#gridDevice").data("kendoGrid").dataItem($(this).closest("tr"));
+            selectedDevices.push(dataItem);
+        });
+
+        // Save selected devices to Local Storage
+        saveSelectedDevicesToLocalStorage(selectedDevices);
+
+        // Move selected devices to Customer's List
+        var customerList = $("#customerListBody");
+
+
+
+
+        $.each(selectedDevices, function (index, device) {
+            var returnButton = $("<button/>").addClass("btn btn-danger").text("Return").click(function () {
+                moveDeviceBackToStorage($(this).closest("tr"), device);
+            });
+
+            var sendButton = $("<button/>").addClass("btn btn-primary").text("Send").click(function () {
+                sendDeviceToAnotherSection($(this).closest("tr"), device);
+            });
+
+            customerList.append("<tr>" +
+                "<td>" + customerid + "</td>" +
+                "<td>" + device.Name + "</td>" +
+                "<td>" + device.Serial + "</td>" +
+                "<td>" + customerName + "</td>" +
+                "<td>" + customerDepartment + "</td>" +
+                "<td>" + customerUnit + "</td>" +
+                "<td></td>" +
+                "</tr>");
+
+            var lastRow = customerList.find("tr").last();
+            lastRow.find("td:last").append(returnButton).append(sendButton);
+        });
+
+        // Hide selected devices in the grid
+        $.each(selectedDevices, function (index, device) {
+            $("#gridDevice").data("kendoGrid").tbody.find("tr[data-uid='" + device.uid + "']").addClass("hidden");
+        });
+
+        // Save data to Local Storage
+        localStorage.setItem("customerListData", customerList.html());
+        updateHiddenDevices();
+    }
+
+    // Function to move a device back to the Storage's section
+    function moveDeviceBackToStorage(row, device) {
+        // Remove the row from Customer's List
+        row.remove();
+
+        // Unhide the corresponding device in the grid
+        $("#gridDevice").data("kendoGrid").tbody.find("tr[data-uid='" + device.uid + "']").removeClass("hidden");
+
+        // Save the updated Customer's List to Local Storage
+        localStorage.setItem("customerListData", $("#customerListBody").html());
+
+        // Update the list of hidden devices in Local Storage
+        updateHiddenDevices();
+    }
+
+    // Function to send a device to another section
+    function sendDeviceToAnotherSection(row, device) {
+        // Implement functionality to send device to another section
+        // This function can be customized according to your requirements
+    }
+
+    // Restore Customer's List from Local Storage
+    function restoreCustomerListFromLocalStorage() {
+        var customerListData = localStorage.getItem("customerListData");
+        if (customerListData) {
+            $("#customerListBody").html(customerListData);
+            $("#customerListBody button.btn-danger").click(function () {
+                var row = $(this).closest("tr");
+                var deviceSerial = row.find("td:eq(2)").text();
+                var device = getDeviceBySerial(deviceSerial);
+                if (device) {
+                    moveDeviceBackToStorage(row, device);
+                }
+            });
+
+            $("#customerListBody button.btn-primary").click(function () {
+                var row = $(this).closest("tr");
+                var deviceSerial = row.find("td:eq(2)").text();
+                var device = getDeviceBySerial(deviceSerial);
+                if (device) {
+                    sendDeviceToAnotherSection(row, device);
+                }
+            });
+
+            updateHiddenDevices();
+        }
+    }
+
+    // Update list of hidden devices in Local Storage
+    function updateHiddenDevices() {
+        var hiddenDevices = [];
+        $("#customerListBody").find("tr").each(function () {
+            var deviceSerial = $(this).find("td:eq(2)").text();
+            hiddenDevices.push(deviceSerial);
+        });
+        localStorage.setItem("hiddenDevices", JSON.stringify(hiddenDevices));
+    }
+
+    // Restore hidden devices from Local Storage
+    function restoreHiddenDevices() {
+        var hiddenDevices = JSON.parse(localStorage.getItem("hiddenDevices") || "[]");
+        $.each(hiddenDevices, function (index, deviceSerial) {
+            $("#gridDevice").data("kendoGrid").tbody.find("tr").each(function () {
+                var dataItem = $("#gridDevice").data("kendoGrid").dataItem($(this));
+                if (dataItem && dataItem.Serial === deviceSerial) {
+                    $(this).addClass("hidden");
+                }
+            });
+        });
+    }
+
+    // Helper function to get a device by its serial number from the grid
+    function getDeviceBySerial(serial) {
+        var devices = $("#gridDevice").data("kendoGrid").dataSource.data();
+        for (var i = 0; i < devices.length; i++) {
+            if (devices[i].Serial === serial) {
+                return devices[i];
+            }
+        }
+        return null;
+    }
+
+</script>
+
+
+
+
+@*Javascript for notification*@
+<script>
+    // Function to display notification
+    function displayNotification(notificationContent) {
+        var notificationList = $("#notificationList");
+        var listItem = $("<li>").text(notificationContent);
+        notificationList.append(listItem);
+    }
+
+    // Function to display notification from Local Storage
+    function displayNotificationFromLocalStorage() {
+        var storedNotifications = JSON.parse(localStorage.getItem("Order")) || [];
+        storedNotifications.forEach(function (notification) {
+            displayNotification(notification);
+        });
+    }
+
+    // Function to restore notifications from Local Storage
+    function restoreNotificationsFromLocalStorage() {
+        var storedNotifications = JSON.parse(localStorage.getItem("Order")) || [];
+        storedNotifications.forEach(function (notification) {
+            displayNotification(notification);
+        });
+    }
+
+    // Function to send a device to another section
+    function sendDeviceToAnotherSection(row, device) {
+        var customerId = $("#drlCus").data("kendoDropDownList").value();
+        var notificationContent = "User ID " + customerId + ": Device " + device.Name + " with Serial Number " + device.Serial + " is sending to you";
+
+        // Display notification
+        displayNotification(notificationContent);
+
+        // Save notification to Local Storage
+        var storedNotifications = JSON.parse(localStorage.getItem("Order")) || [];
+        storedNotifications.push(notificationContent);
+        localStorage.setItem("Order", JSON.stringify(storedNotifications));
+    }
+
+    // Check and display notification when the page loads
+    $(document).ready(function () {
+        restoreCustomerListFromLocalStorage();
+        displayNotificationFromLocalStorage(); // Add this line to display notifications
+    });
+
+    $('#notificationorder').click(function () {
+        $('#notificationPanelOrder').toggle();
+    });
+
+    /*  localStorage.removeItem('Order');*/
+
+</script>
+
+<style>
+    /* Body và phông chữ */
+    body {
+        background-color: #fff; /* Màu nền trắng */
+        color: #000; /* Màu chữ đen */
+    }
+
+    /* Card */
+    .card {
+        background-color: #222; /* Màu nền của card */
+        color: #ccc; /* Màu chữ của card */
+        border: 1px solid #444; /* Viền của card */
+    }
+
+    /* Card header */
+    .card-header {
+        background-color: #444; /* Màu nền của header */
+        color: #ccc; /* Màu chữ của header */
+    }
+
+    /* Card body */
+    .card-body {
+        background-color: #444; /* Màu nền của body */
+        color: #000; /* Màu chữ của body */
+    }
+
+    /* Card footer */
+    .card-footer {
+        background-color: black; /* Màu nền của footer */
+        color: #ccc; /* Màu chữ của footer */
+    }
+
+    /* Button */
+    .btn2 {
+        background-color: #555; /* Màu nền của button */
+        color: #ccc; /* Màu chữ của button */
+        border-radius: inherit;
+    }
+
+    /* Button hover */
+    .btn:hover {
+        background-color: #666; /* Màu nền của button khi hover */
+    }
+
+    /* Table */
+    .table {
+        background-color: black;
+        color: #ccc;
+        border: 1px solid #444;
+    }
+
+        /* Table header */
+        .table thead th {
+            background-color: #948e8e;
+            color: #ccc;
+            border: 1px solid #444;
+        }
+
+        /* Table row */
+        .table tbody tr {
+            background-color: white; /* Màu nền của row */
+            color: black; /* Màu chữ của row */
+            border: 1px solid #444; /* Viền của row */
+        }
+
+    /* Checkbox */
+    .chkDevice {
+        background-color: #948e8e;
+        color: #000;
+    }
+
+    /* Dropdown */
+    .k-dropdown {
+        background-color: white;
+        color: #000;
+        border: 1px solid #444;
+    }
+
+    /* Dropdown item */
+    .k-item {
+        background-color: #fff;
+        color: #000;
+    }
+
+
+        .k-item:hover {
+            background-color: #444;
+            color: #ccc;
+        }
+
+
+
+    .notification-store {
+        position: fixed;
+        top: 50px;
+        right: 20px;
+        background-color: #4d4d4d;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        z-index: 1000;
+    }
+
+    .notification-panelstore {
+        display: none;
+        position: fixed;
+        top: 60px;
+        right: 20px;
+        background-color: #333;
+        color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 999;
+    }
+
+    .notification-item {
+        background-color: #444;
+        padding: 10px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+    }
+</style>
+
+
+<div id="notificationIcon" class="notification-icon">
+    <i class="fas fa-bell"></i>
+</div>
+
+<!-- Notification Panel -->
+<div id="notificationPanel" class="notification-panel">
+    <div id="notificationContent"></div>
+</div>
+
+@*Notification Icon
+    <div id="notificationIcon3" class="notification-icon3">
+        <i class="fas fa-bell"></i>
+    </div>
+    Notification Panel
+    <div id="notificationPanel3" class="notification-panel3">
+        <div id="notificationContent3"></div>
+    </div>*@
+<!-- JavaScript -->
+@*OverView Request*@
+<script>
+    $(document).ready(function () {
+        // Restore notifications for notificationPanel from localStorage
+        var savedNotifications = localStorage.getItem('notifications');
+        if (savedNotifications) {
+            $('#notificationContent').html(savedNotifications);
+            $('#notificationPanel').show();
+        }
+
+        // Toggle notification panel display
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+
+        // Handle "Delete" button click
+        $('#notificationContent').on('click', '.delete-button', function () {
+            $(this).closest('.notification-item').remove();
+
+            // Update localStorage
+            var currentNotifications = $('#notificationContent').html();
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Handle "Send to Storage" button click
+        $('#notificationContent').on('click', '.storage-button', function () {
+            var notificationItem = $(this).closest('.notification-item');
+            var notificationText = notificationItem.clone().children().remove().end().text().trim(); // Get text without buttons
+            var notificationHtml = '<div class="notification-item">' + notificationText +
+                '<button class="btn btn-sm btn-success accept-button">Accept</button>' +
+                '<button class="btn btn-sm btn-danger deny-button">Deny</button></div>';
+
+            // Add notification to notificationPanel3
+            $('#notificationContent3').append(notificationHtml);
+            $('#notificationPanel3').show();
+
+            // Save notification to localStorage
+            var currentNotifications3 = localStorage.getItem('notifications3') || '';
+            localStorage.setItem('notifications3', currentNotifications3 + notificationHtml);
+
+            // Remove notification from notificationPanel
+            notificationItem.remove();
+            var currentNotifications = $('#notificationContent').html();
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Handle "Deny" button click
+        $('#notificationContent3').on('click', '.deny-button', function () {
+            var notificationItem = $(this).closest('.notification-item');
+            var notificationText = notificationItem.clone().children().remove().end().text().trim(); // Get text without buttons
+            var updatedNotificationHtml = '<div class="notification-item">' + notificationText + ' has been denied' +
+                '<button class="btn btn-sm btn-success no-button" onclick="sendToST()">Decline</button>' +
+                '<button class="btn btn-sm btn-warning delete-button">Delete</button>' +
+                '<button class="btn btn-sm btn-warning storage-button">Send to storage</button></div>';
+
+            // Add notification back to notificationPanel
+            $('#notificationContent').append(updatedNotificationHtml);
+            $('#notificationPanel').show();
+
+            // Update localStorage for notificationPanel
+            var currentNotifications = $('#notificationContent').html();
+            localStorage.setItem('notifications', currentNotifications);
+
+            // Remove notification from notificationPanel3
+            notificationItem.remove();
+            var currentNotifications3 = $('#notificationContent3').html();
+            localStorage.setItem('notifications3', currentNotifications3);
+        });
+
+        // Toggle notification panel display for notificationPanel3
+        $('#notificationIcon3').click(function () {
+            $('#notificationPanel3').toggle();
+        });
+
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+    });
+</script>
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+        // Tái tạo thông báo từ localStorage khi trang được load
+        var savedNotifications = localStorage.getItem('notifications');
+        if (savedNotifications) {
+            $('#notificationContent').html(savedNotifications);
+            $('#notificationPanel').show();
+        }
+
+        var savedDeclinedNotifications = localStorage.getItem('declinedNotifications');
+        if (savedDeclinedNotifications) {
+            $('#notificationContent2').html(savedDeclinedNotifications);
+            $('#notificationPanel2').show();
+        }
+
+        // Xóa thông báo khi nhấp vào nút "Delete"
+        $('#notificationContent').on('click', '.delete-button', function () {
+            $(this).closest('.notification-item').remove();
+
+            // Cập nhật lại localStorage
+            var currentNotifications = '';
+            $('#notificationContent .notification-item').each(function () {
+                currentNotifications += $(this).html();
+            });
+            localStorage.setItem('notifications', currentNotifications);
+        });
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo
+        $('#notificationIcon').click(function () {
+            $('#notificationPanel').toggle();
+        });
+
+        // Hàm hiển thị thông báo trên notification mới và lưu vào localStorage mới
+        function showNotification2(message) {
+            $('#notificationContent2').append('<div class="notification-item">' + message + '</div>');
+            $('#notificationPanel2').show();
+
+            var currentDeclinedNotifications = localStorage.getItem('declinedNotifications') || '';
+            localStorage.setItem('declinedNotifications', currentDeclinedNotifications + '<div class="notification-item">' + message + '</div>');
+        }
+
+        // Đóng thông báo khi nhấp vào biểu tượng thông báo của notification mới
+        $('#notificationIcon2').click(function () {
+            $('#notificationPanel2').toggle();
+        });
+
+        // Xử lý sự kiện khi nhấp vào nút "No" ở notification-icon
+        $('#notificationContent').on('click', '.no-button', function () {
+            var description = $(this).closest('.notification-item').text().split(':')[1].trim();
+            var declinedNotification = '-Notification:' + description + ' have been declined';
+            showNotification2(declinedNotification);
+        });
+
+
+    });
+</script>
+
+
+
+<script>
+
+    $(document).ready(function () {
+        // Khôi phục thông báo cho notificationPanel4 từ localStorage
+        var savedNotifications4 = localStorage.getItem('notifications4');
+        if (savedNotifications4) {
+            $('#notificationContent4').html(savedNotifications4);
+            $('#notificationPanel4').show();
+        }
+
+        // Xử lý sự kiện nhấn nút "Accept" trong notificationPanel3
+        $('#notificationContent3').on('click', '.accept-button', function () {
+            var notificationItem = $(this).closest('.notification-item');
+            var notificationText = notificationItem.text().trim();
+
+            // Hiển thị thông báo trong notificationPanel4 và lưu vào localStorage
+            var notificationHtml = '<div class="notification-item">' + notificationText + ' has been accepted, please check the Project section</div>';
+            $('#notificationContent4').append(notificationHtml);
+            $('#notificationPanel4').show();
+
+            var currentNotifications4 = localStorage.getItem('notifications4') || '';
+            localStorage.setItem('notifications4', currentNotifications4 + notificationHtml);
+
+            // Xóa thông báo khỏi notificationPanel3
+            notificationItem.remove();
+            var currentNotifications3 = $('#notificationContent3').html();
+            localStorage.setItem('notifications3', currentNotifications3);
+        });
+
+        // Đóng thông báo khi nhấn vào biểu tượng thông báo của notificationPanel4
+        $('#notificationIcon4').click(function () {
+            $('#notificationPanel4').toggle();
+        });
+    });
+
+
+</script>
+
+
+
+<div id="notificationIcon4" class="notification-icon4">
+    <i class="fas fa-envelope"></i>
+</div>
+<div id="notificationPanel4" class="notification-panel4">
+    <div id="notificationContent4"></div>
+</div>
+
+
+
+
+<style>
+    /* CSS cho notification icon */
+    .notification-icon {
+        position: fixed;
+        bottom: 20px; /* Điều chỉnh khoảng cách từ dưới lên */
+        right: 20px; /* Điều chỉnh khoảng cách từ phải sang trái */
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 24px;
+        background-color: #434343; /* Màu nền */
+        color: white;
+        width: 50px;
+        height: 50px; /* Chiều cao */
+        border-radius: 50%; /* Bo tròn */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+
+
+    /* CSS cho notification panel */
+    .notification-panel {
+        display: none;
+        position: fixed;
+        bottom: 90px; /* Điều chỉnh khoảng cách từ dưới lên */
+        right: 20px; /* Điều chỉnh khoảng cách từ phải sang trái */
+        z-index: 9999;
+        background-color: white; /* Thay đổi màu nền thành trắng */
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    /* CSS cho notification item */
+    .notification-item {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+        color: #333; /* Màu chữ */
+        background-color: white;
+    }
+
+
+
+    /* CSS cho các button trong notification */
+    .no-button, .delete-button {
+        background - color: transparent; /* Màu nền trong suốt */
+        color: #333; /* Màu chữ */
+        border: 1px solid #333; /* Viền */
+        padding: 5px 10px; /* Khoảng cách trong button */
+        margin-right: 5px; /* Khoảng cách với button khác */
+        cursor: pointer;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* Hiệu ứng chuyển đổi */
+    }
+
+        .no-button:hover, .delete-button:hover {
+            background - color: #333; /* Màu nền khi di chuột qua */
+            color: #fff; /* Màu chữ khi di chuột qua */
+            border-color: #333; /* Màu viền khi di chuột qua */
+        }
+
+
+    /* CSS cho nút thông báo */
+    .notification-icon4 {
+        position: fixed;
+        bottom: 20px;
+        right: 250px;
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 24px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #4CAF50; /* Màu nền của biểu tượng */
+        color: #fff; /* Màu chữ của biểu tượng */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+        .notification-icon4:hover {
+            background-color: #45a049; /* Màu nền khi di chuột qua */
+        }
+
+    /* CSS cho panel thông báo */
+    .notification-panel4 {
+        display: none;
+        position: fixed;
+        bottom: 70px;
+        right: 330px;
+        z-index: 9999;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        border-radius: 10px; /* Độ cong viền của panel */
+    }
+
+    .notification-content4 {
+        padding: 10px;
+    }
+
+    .notification-item4 {
+        padding: 10px;
+        border-bottom: 1px solid #ccc;
+        color: #333; /* Màu chữ của thông báo */
+    }
+
+        .notification-item4:last-child {
+            border-bottom: none; /* Loại bỏ đường viền dưới cùng */
+        }
+</style>

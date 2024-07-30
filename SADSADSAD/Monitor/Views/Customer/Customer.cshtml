@@ -1,0 +1,293 @@
+﻿@using Model.EF
+@using Kendo.Mvc
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+@using Kendo.Mvc.UI
+
+@*Notification for Ordering*@
+<div id="notificationorder" class="notification-order">
+    <i class="fas fa-envelope"></i>
+</div>
+
+<div id="notificationPanelOrder" class="notificationorder">
+    <ul id="notificationList"></ul>
+</div>
+
+<style>
+    /* Phần notificationorder */
+    #notificationorder {
+        font-size: 58px;
+        color: #948e8e;
+        position: fixed;
+        top: 40px;
+        right: 320px;
+    }
+
+    /* Phần notificationPanelOrder */
+    #notificationPanelOrder {
+        position: fixed;
+        overflow-y: auto;
+        top: 60px;
+        right: 20px;
+        z-index: 1000;
+        background-color: #fff; /* Màu nền */
+        border: 1px solid #ddd; /* Viền */
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng */
+        max-width: 300px;
+        height:150px;
+    }
+
+        #notificationPanelOrder ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            #notificationPanelOrder ul li {
+                padding: 10px;
+                border-bottom: 1px solid #ddd; /* Viền phân chia giữa các thông báo */
+            }
+
+                #notificationPanelOrder ul li:last-child {
+                    border-bottom: none; /* Loại bỏ viền ở phần tử cuối cùng */
+                }
+
+                #notificationPanelOrder ul li i {
+                    margin-right: 10px; /* Khoảng cách giữa biểu tượng và nội dung của thông báo */
+                    font-size: 20px; /* Kích thước biểu tượng */
+                    color: #555; /* Màu của biểu tượng */
+                }
+
+
+</style>
+
+<!-- Notification -->
+<div id="notificationIcon" class="notificationicon">
+    <i class="fas fa-bell"></i>
+</div>
+
+<div id="notificationPanel" class="notificationpanel">
+    <div id="notificationContent"></div>
+</div>
+
+<div class="container-fluid px-4">
+    <h1>Description of the device</h1>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Demand
+            </div>
+            <div class="card-body">
+                <input id="projectSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Grid<Customer>()
+                    .Name("gridCustomer")
+                    .Columns(columns =>
+                    {
+                        columns.Bound(p => p.ID).Title("ID");
+                        columns.Bound(p => p.Name).Title("Name");
+                        columns.Bound(p => p.Unit).Title("Unit");
+                        columns.Bound(p => p.Department).Title("Department");
+                        columns.Bound(p => p.Description).Title("Description");
+                        columns.Command(command =>
+                        {
+                            command.Edit();
+                            command.Destroy();
+                        }).Title("Actions").Width(200);
+                    })
+                    .Sortable()
+                    .Navigatable()
+                    .Filterable()
+                    .ToolBar(toolbar => toolbar.Create())
+                    .Editable(editable => editable.Mode(GridEditMode.InLine))
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(model =>
+                        {
+                            model.Id(p => p.ID);
+                            model.Field(p => p.ID).Editable(false);
+                        })
+                        .Create(create => create.Action("CreateCus", "Customer"))
+                        .Read(read => read.Action("GetCusData", "Customer"))
+                        .Update(update => update.Action("UpdateCus", "Customer"))
+                        .Destroy(destroy => destroy.Action("DeleteCus", "Customer"))
+                    )
+                )
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->  
+<script>
+    $(document).ready(function () {
+        // Khôi phục thông báo từ Local Storage khi trang được load
+        showNotificationsFromLocalStorage();
+
+        // Xử lý khi click vào nút Approve
+        $('#gridCustomer').on('click', '.btn-approve', function () {
+            var row = $(this).closest('tr');
+            var dataItem = $("#gridCustomer").data("kendoGrid").dataItem(row);
+            var description = dataItem.Description;
+            var notification = "-Notification: " + description + "<span style='color: green'> have been approved </span>";
+
+            saveAndDisplayNotification(notification);
+        });
+
+        // Xử lý khi click vào nút Deny
+        $('#gridCustomer').on('click', '.btn-deny', function () {
+            var row = $(this).closest('tr');
+            var dataItem = $("#gridCustomer").data("kendoGrid").dataItem(row);
+            var description = dataItem.Description;
+            var notification = "-Notification:" + description + "<span style='color: red'> have been denied </span>";
+
+            saveAndDisplayNotification(notification);
+        });
+
+        // Xử lý khi click vào biểu tượng thông báo
+        $('#notificationIcon').on('click', function () {
+            showNotificationsFromLocalStorage();
+        });
+
+        // Hàm hiển thị thông báo và lưu vào Local Storage
+        function saveAndDisplayNotification(notification) {
+            showNotification(notification);
+            saveNotificationToLocalStorage(notification);
+        }
+
+        // Hàm hiển thị thông báo
+        function showNotification(message) {
+            $('#notificationContent').append('<div>New Notification: ' + message + '</div>');
+            $('#notificationPanel').show();
+        }
+
+        // Hàm lưu thông báo vào Local Storage
+        function saveNotificationToLocalStorage(notification) {
+            var currentNotifications = localStorage.getItem('customNotifications') || '';
+            var updatedNotifications = currentNotifications + notification + ',';
+            localStorage.setItem('customNotifications', updatedNotifications);
+        }
+
+        // Hàm hiển thị thông báo từ Local Storage
+        function showNotificationsFromLocalStorage() {
+            var notifications = localStorage.getItem('customNotifications') || '';
+            var notificationsArray = notifications.split(',');
+            var content = '';
+            notificationsArray.forEach(function (notification) {
+                if (notification !== '') {
+                    content += '<div>' + notification + '</div>';
+                }
+            });
+            $('#notificationContent').html(content);
+        }
+    });
+
+    $('#notificationIcon').click(function () {
+        $('#notificationPanel').toggle();
+    });
+
+    /* Javascript for ordering */
+
+    // Function to display notification
+    function displayNotification(notificationContent) {
+        var notificationList = $("#notificationList");
+        var listItem = $("<li>").text(notificationContent);
+        notificationList.append(listItem);
+    }
+
+    // Function to display notification from Local Storage
+    function displayNotificationFromLocalStorage() {
+        var storedNotifications = JSON.parse(localStorage.getItem("Order")) || [];
+        storedNotifications.forEach(function (notification) {
+            displayNotification(notification);
+        });
+    }
+
+    // Function to restore notifications from Local Storage
+    function restoreNotificationsFromLocalStorage() {
+        var storedNotifications = JSON.parse(localStorage.getItem("Order")) || [];
+        storedNotifications.forEach(function (notification) {
+            displayNotification(notification);
+        });
+    }
+
+    // Function to send a device to another section
+    function sendDeviceToAnotherSection(row, device) {
+        var customerId = $("#drlCus").data("kendoDropDownList").value();
+        var notificationContent = "User ID " + customerId + ": Device " + device.Name + " with Serial Number " + device.Serial + " is sending to you";
+
+        // Display notification
+        displayNotification(notificationContent);
+
+        // Save notification to Local Storage
+        var storedNotifications = JSON.parse(localStorage.getItem("Order")) || [];
+        storedNotifications.push(notificationContent);
+        localStorage.setItem("Order", JSON.stringify(storedNotifications));
+    }
+
+    // Check and display notification when the page loads
+    $(document).ready(function () {
+        displayNotificationFromLocalStorage(); // Add this line to display notifications
+    });
+
+    $('#notificationorder').click(function () {
+        $('#notificationPanelOrder').toggle();
+    });
+</script>
+
+
+
+@*NOTIFICATION APPROVE*@
+
+<!-- CSS -->
+<style>
+    /* CSS cho notification 1 */
+    .notificationicon {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        cursor: pointer;
+        font-size: 24px;
+        background-color: #434343; /* Màu nền */
+        color: white;
+        width: 50px;
+        height: 50px; /* Chiều cao */
+        border-radius: 50%; /* Bo tròn */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+
+    .notification-icon:hover {
+        background-color: #333; /* Màu nền khi di chuột qua */
+    }
+
+    .notification-icon i {
+        transform: translateY(1px); /* Dịch chuyển icon xuống 1px */
+    }
+
+    .notificationpanel {
+        display: none;
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        z-index: 9999;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        width: 300px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+</style>

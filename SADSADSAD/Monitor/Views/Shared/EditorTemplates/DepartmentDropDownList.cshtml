@@ -1,0 +1,25 @@
+﻿@model int?
+
+@(Html.Kendo().DropDownList()
+    .Name("") // Đừng sử dụng Name ở đây
+    .DataTextField("name") // Sử dụng trường name để hiển thị tên phòng ban
+    .DataValueField("id") // Sử dụng trường id để lấy giá trị ID của phòng ban
+    .OptionLabel("Select Department") 
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("PopulateDepartList", "MainUsers"); 
+        });
+    })
+    .Value(@Model.HasValue ? Model.Value.ToString() : "") // Đặt giá trị được chọn
+    .Events(e => e.Change("onDepartmentChange")) // Thêm sự kiện khi thay đổi giá trị
+)
+
+<script>
+    function onDepartmentChange(e) {
+        var grid = $("#griUser").data("kendoGrid");
+        var dataItem = grid.dataItem(grid.select()); // Lấy dữ liệu của dòng đang chọn
+        dataItem.set("id_phongban", this.value()); // Cập nhật giá trị ID của phòng ban khi thay đổi tên
+    }
+</script>

@@ -1,0 +1,260 @@
+﻿@using Model.ViewModel;
+@{
+    ViewBag.Title = "Trang chủ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1>Dashboard</h1>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="row-sm-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-table me-1"></i>
+                        Tin các ban phát trong ngày
+                    </div>
+                    <div class="card-body">
+                        @(Html.Kendo().Grid<Model.ViewModel.mDepartmentViewModel>()
+                        .Name("gridDepartment")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.Department).Title("Đơn vị");
+                            columns.Bound(p => p.Status).Title("Status")
+                                                .ClientTemplate("<span class='badgeTemplate'></span>")
+                                                .HeaderHtmlAttributes(new { @class = "k-text-center" })
+                                                .HtmlAttributes(new { @class = "k-text-center" });
+                            columns.Bound(p => p.TotalRecord).Title("Số Tin")
+                                                .HeaderHtmlAttributes(new { @class = "k-text-center" })
+                                                .HtmlAttributes(new { @class = "k-text-right" });
+                            columns.Bound(p => p.PublishDate).Title("Tin phát cuối").Format("{0: dd/MM/yyyy HH:mm:ss}");
+                            columns.Bound(p => p.FileName).Title("Tên File");
+                            columns.Bound(p => p.Note).Title("Ghi chú");
+                        })
+                        .Sortable()
+                        .Events(events => events.DataBound("onDataBound"))
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .AutoSync(true)
+                            .ServerOperation(false)
+                            .Model(model =>
+                            {
+                                model.Id(p => p.DepartmentID);
+                                model.Field(p => p.Department).Editable(false);
+                                model.Field(p => p.FileName).Editable(false);
+                                model.Field(p => p.Note).Editable(false);
+                                model.Field(p => p.PublishDate);
+                                model.Field(p => p.Status);
+                                model.Field(p => p.TotalRecord);
+                            })
+                            .Read(read => read.Action("PopulateDepartmentView", "Home"))
+                        )
+						)
+                    </div>
+                </div>
+            </div>
+            <div class="row-sm-6">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-area me-1"></i>
+                        Biểu đồ tin các ban
+                    </div>
+                    <div class="card-body">
+                        @(Html.Kendo().Chart<DepartmentArticleViewModel>()
+							.Name("chart")
+							.Theme("Silver")
+							.Title("Lượng tin phát các ban tin \n /Thống kê 10 ngày gần nhất/")
+							.Legend(legend => legend
+								.Position(ChartLegendPosition.Bottom)
+							)
+							.ChartArea(chartArea => chartArea
+								.Background("transparent")
+							)
+							.SeriesDefaults(seriesDefaults =>
+								seriesDefaults.Line().Style(ChartLineStyle.Smooth)
+							)
+							.DataSource(ds => ds.Read(read => read.Action("PopulateViewChart", "Home")))
+							.Series(series => {
+								series.Line(model => model.btn).Name("Ban BTT trong nước").CategoryField("Date");
+								series.Line(model => model.btg).Name("Ban BTT Thế giới").CategoryField("Date");
+								series.Line(model => model.bkt).Name("Ban BTT Kinh tế").CategoryField("Date");
+								series.Line(model => model.bdn).Name("Ban BTT Đối ngoại").CategoryField("Date");
+								series.Line(model => model.bsxa).Name("Ban BTSX Ảnh").CategoryField("Date");
+								series.Line(model => model.ttl).Name("TT Thông tin tư liệu").CategoryField("Date");
+							})
+							.ValueAxis(axis => axis
+								.Numeric().Labels(labels => labels.Format("{0}"))
+								.Line(line => line.Visible(false))
+								.AxisCrossingValue(-10)
+								.Title(title => title.Text("Số tin phát"))
+							)
+							.CategoryAxis(axis => axis
+								.Date()
+								.MajorGridLines(line => line.Visible(false))
+								.Labels(labels => labels
+										.DateFormats(formats => formats.Days("dd/MM"))
+										.Rotation("auto")
+										)
+								.Title(title => title.Text("Ngày"))
+							)
+							.Tooltip(tooltip => tooltip
+								.Visible(true)
+								.Format("{0}")
+								.Template("#= series.name #: #= value #")
+							)
+						)
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="row-sm-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-table me-1"></i>
+                        Tin crawl từ các báo trong ngày
+                    </div>
+                    <div class="card-body">
+                        @(Html.Kendo().Grid<Model.ViewModel.mDepartmentViewModel>()
+                        .Name("gridPartner")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.Department).Title("Đơn vị");
+                            columns.Bound(p => p.Status).Title("Status")
+                                                .ClientTemplate("<span class='badgeTemplate'></span>")
+                                                .HeaderHtmlAttributes(new { @class = "k-text-center" })
+                                                .HtmlAttributes(new { @class = "k-text-center" });
+                            columns.Bound(p => p.TotalRecord).Title("Số Tin")
+                                                .HeaderHtmlAttributes(new { @class = "k-text-center" })
+                                                .HtmlAttributes(new { @class = "k-text-right" });
+                            columns.Bound(p => p.PublishDate).Title("Tin phát cuối").Format("{0: dd/MM/yyyy HH:mm:ss}");
+                            columns.Bound(p => p.FileName).Title("Tên File");
+                            columns.Bound(p => p.Note).Title("Ghi chú");
+                        })
+                        .Sortable()
+                        .Navigatable()
+                        .Events(events => events.DataBound("onDataBound"))
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .AutoSync(true)
+                            .ServerOperation(false)
+                            .Model(model =>
+                            {
+                                model.Id(p => p.DepartmentID);
+                                model.Field(p => p.Department).Editable(false);
+                                model.Field(p => p.FileName).Editable(false);
+                                model.Field(p => p.Note).Editable(false);
+                                model.Field(p => p.PublishDate);
+                                model.Field(p => p.Status);
+                                model.Field(p => p.TotalRecord);
+                            })
+                            .Read(read => read.Action("PopulatePartnerView", "Home"))
+                            .Sort(sort => sort.Add("TotalRecord").Descending())
+                        )
+						)
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="card text-white bg-success mb-4">
+                        <div class="card-header" style="text-align:center"><h4>Tổng số tin ảnh phát trong ngày</h4></div>
+                        <div class="card-body" style="text-align:center; font-size:65px">
+                            <p class="card-text" id="publish">@ViewBag.totalPublished</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="card text-white bg-primary mb-4">
+                        <div class="card-header" style="text-align:center"><h4>Tổng số tin crawl trong ngày</h4></div>
+                        <div class="card-body" style="text-align:center; font-size:65px">
+                            <p class="card-text" id="crawl">@ViewBag.totalCrawled</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="card text-white bg-danger mb-4">
+                        <div class="card-header" style="text-align:center"><h4>Tổng số lỗi xảy ra trong ngày</h4></div>
+                        <div class="card-body" style="text-align:center; font-size:65px">
+                            <p class="card-text" id="error">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        setInterval(function () {
+
+            $.ajax({
+                url: '/Home/GetTotalPublished',
+                type: 'Post',
+                dataType: 'json',
+                success: function (result) {
+                    $("#publish").html(result);
+                },
+                error: function (error) {
+                    alert(error);
+                }
+            });
+
+            $("#gridDepartment").data("kendoGrid").dataSource.read();
+            $("#chart").data("kendoChart").dataSource.read();
+        }, 600000);
+
+        setInterval(function () {
+
+            $.ajax({
+                url: '/Home/GetTotalCrawled',
+                type: 'Post',
+                dataType: 'json',
+                success: function (result) {
+                    $("#crawl").html(result);
+                },
+                error: function (error) {
+                    alert(error);
+                }
+            });
+
+            $("#gridPartner").data("kendoGrid").dataSource.read();
+        }, 7200000);
+    });
+
+    function getHtmlNewLinesString(text) {
+        var regexp = new RegExp('\n', 'g');
+        return text.replace(regexp, '<br>');
+    }
+
+    function onDataBound(e) {
+        var grid = this;
+        for (var i = 0; i < this.columns.length - 1; i++) {
+            this.autoFitColumn(i);
+        }
+
+        grid.table.find("tr").each(function () {
+            var dataItem = grid.dataItem(this);
+            var themeColor = dataItem.Status ? 'success' : 'error';
+            var text = dataItem.Status ? 'Ok' : 'Error';
+
+            $(this).find('script').each(function () {
+                eval($(this).html());
+            });
+
+            $(this).find(".badgeTemplate").kendoBadge({
+                themeColor: themeColor,
+                text: text,
+            });
+
+            kendo.bind($(this), dataItem);
+        });
+    }
+</script>
+<style>
+    #chart {
+        background: center no-repeat url('@Url.Content("~/Assets/assets/img/world-map.png")')
+    }
+</style>

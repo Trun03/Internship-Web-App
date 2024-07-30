@@ -1,0 +1,23 @@
+﻿@using Model.ViewModel;
+@{
+    ViewBag.Title = "Text";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container-fluid px-4">
+    <h1>Insert tin Portal</h1>
+    <label for="combobox">Select item:</label>
+    @(Html.Kendo().DropDownList()
+            .Name("department")
+            .HtmlAttributes(new { style = "width:100%" })
+            .OptionLabel("Ban Tin...")
+            .DataTextField("DepartmentName")
+            .DataValueField("DepartmentID")
+            .DataSource(source =>
+            {
+                source.Read(read =>
+                {
+                    read.Action("PopulateDepartmentList", "Text");
+                });
+            })
+        )
+</div>

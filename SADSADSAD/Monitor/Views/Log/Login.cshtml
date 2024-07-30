@@ -1,0 +1,73 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/Content/styles.css">
+    <title>Login</title>
+</head>
+<body>
+    <div>
+        <main>
+            <form action="/Log/Login" method="post">
+                <label for="account">Account</label>
+                <input type="text" id="account" name="account" required>
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">Sign in</button>
+            </form>
+            @if (ViewBag.ErrorMessage != null)
+            {
+                <p style="color:red">@ViewBag.ErrorMessage</p>
+            }
+        </main>
+    </div>
+</body>
+</html>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+        padding: 20px;
+    }
+
+    form {
+        display: flex;
+        flex-direction: column;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    label {
+        margin-top: 10px;
+    }
+
+    input,
+    button {
+        width: 100%;
+        margin-top: 5px;
+        padding: 5px;
+    }
+
+    button {
+        background-color: #1349aa;
+        color: white;
+        border: none;
+        cursor: pointer;
+        width:80px;
+    }
+
+        button:hover {
+            background-color: #2396c8;
+        }
+
+    p {
+        text-align: center;
+        margin-top: 30px;
+    }
+</style>

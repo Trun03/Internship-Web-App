@@ -1,0 +1,7 @@
+﻿@model int?
+
+@(Html.Kendo().DropDownListFor(m => m)
+    .DataTextField("Name")
+    .DataValueField("DeviceID")
+    .BindTo((System.Collections.IEnumerable)ViewData["DeviceList"])
+)

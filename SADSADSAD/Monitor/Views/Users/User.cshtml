@@ -1,0 +1,291 @@
+﻿@using Kendo.Mvc;
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@*BẢNG Đơn vị*@
+<div class="container-fluid px-4">
+    <h1>Unit's list</h1>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Unit
+            </div>
+            <div class="card-body">
+                <input id="UnitSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Grid<Model.EF.Donvi>()
+                        .Name("gridonvi")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.id).Title("ID");
+                            columns.Bound(p => p.name).Title("Unit's name");
+                            columns.Bound(p => p.description).Title("Description");
+                            columns.Command(command =>
+                            {
+                                command.Edit();
+                                command.Destroy();
+                            }).Title("Actions").Width(200);
+                        })
+                        .Sortable()
+                        .Navigatable()
+                        .Filterable()
+                        .ToolBar(toolbar => toolbar.Create())
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Model(model =>
+                            {
+                                model.Id(p => p.id);
+                                model.Field(p => p.id).Editable(false);
+                            })
+                            .Create(create => create.Action("AddUnit", "Users"))
+                            .Read(read => read.Action("GetUnit", "Users"))
+                            .Update(update => update.Action("UpdateUnit", "Users"))
+                            .Destroy(destroy => destroy.Action("DeleteUnit", "Users"))
+                       )
+                    )
+
+            </div>
+
+            @*Dropdownlist Unit*@
+
+            <div class="card-body">
+                @(Html.Kendo().DropDownList()
+                    .Name("drlUnit")
+                    .DataTextField("name")
+                    .DataValueField("id")
+                    .OptionLabel("Unit's Dropdown List")
+                    .Events(e =>
+                    {
+                        e.Change("onUnitChange");
+                    })
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("PopulateUnitList", "Users");
+                        });
+                    })
+                )
+            </div>
+
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+
+
+
+
+@*BẢNG PHÒNG BAN*@
+<div class="container-fluid px-4">
+    <h1>Department's list</h1>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Dep
+            </div>
+            <div class="card-body">
+                <input id="DepSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Grid<Model.EF.Phongban>()
+                        .Name("gridphongban") // Đảm bảo tên lưới đúng ở đây
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.id).Title("ID");
+                            columns.Bound(p => p.id_donvi).Title("Unit's ID");
+                            columns.Bound(p => p.name).Title("Department's name");
+                            columns.Bound(p => p.description).Title("Description");
+                            columns.Command(command =>
+                            {
+                                command.Edit();
+                                command.Destroy(); // Thêm hành động xóa
+                            }).Title("Actions").Width(200);
+                        })
+                        .Sortable()
+                        .Navigatable()
+                        .Filterable()
+                        .ToolBar(toolbar => toolbar.Create())
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Model(model =>
+                            {
+                                model.Id(p => p.id);
+                                model.Field(p => p.id).Editable(false);
+                            })
+                            .Create(create => create.Action("AddDepartment", "Users"))
+                            .Read(read => read.Action("PopulateDepartbyID", "Users").Data("infoUnit"))
+                            .Update(update => update.Action("UpdatePhongban", "Users"))
+                            .Destroy(destroy => destroy.Action("DeletePhongban", "Users"))
+                       )
+                    )
+
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+
+
+
+
+
+@*Dropdownlist*@
+<script>
+    function onUnitChange() {
+        $("#gridphongban").data("kendoGrid").dataSource.read();
+    }
+    function infoUnit() {
+        var tempval = $("#drlUnit").data("kendoDropDownList").value();
+        return {
+            unitID: tempval
+        }
+    }
+</script>
+
+
+
+
+
+@*SearchbarPhongban*@
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#DepSearchInput").on("keyup", function () {
+            var searchText = $(this).val();
+            searchDep(searchText);
+        });
+    });
+
+    function searchDep(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchDep", "Users")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#gridphongban").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching projects: " + error);
+            }
+        });
+    }
+
+
+        $(document).ready(function () {
+        $("#UnitSearchInput").on("keyup", function () {
+            var searchText = $(this).val();
+            searchUnit(searchText);
+        });
+    });
+
+    function searchUnit(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchUnit", "Users")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#gridonvi").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching units: " + error);
+            }
+        });
+    }
+</script>
+
+
+<style>
+    /* CSS for card */
+    .card {
+        border: 1px solid #434343; /* Dark gray */
+        border-radius: 10px;
+        background-color: #4d4d4d; /* Dark gray */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background-color: #333; /* Dark gray */
+        color: #fff; /* White */
+        padding: 15px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    /* CSS for input */
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #434343; /* Dark gray */
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    /* CSS for dropdown */
+    .k-dropdown {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #434343; /* Dark gray */
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    /* CSS for table */
+    .k-grid {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        .k-grid th,
+        .k-grid td {
+            padding: 10px;
+            border: 1px solid #434343; /* Dark gray */
+            color: #000; /* Black */
+        }
+
+        .k-grid th {
+            background-color: #434343; /* Dark gray */
+        }
+
+        .k-grid-header th.k-header > .k-link {
+            display: block;
+            min-height: 18px;
+            line-height: 18px;
+            margin: -.5em -.6em -.4em 0;
+            padding: .5em .6em .4em 0;
+            overflow: hidden;
+            color: white;
+            text-overflow: ellipsis;
+        }
+
+    /* CSS for toolbar buttons */
+    .k-grid-toolbar {
+        margin-bottom: 20px;
+    }
+</style>
+
+

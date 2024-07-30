@@ -1,0 +1,177 @@
+﻿@using Model.EF
+@using Kendo.Mvc
+@using Kendo.Mvc.UI
+@{
+    Layout = null;
+}
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout2.cshtml";
+}
+
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h1>Warranty and Repair Section</h1>
+                <i class="fas fa-table me-1"></i>
+                War and Re
+            </div>
+            <div class="card-body">
+                <h2>User's list</h2>
+                @(Html.Kendo().Grid<User>()
+                        .Name("grid")
+                        .Columns(columns =>
+                        {
+                            columns.Template(@<text></text>).ClientTemplate("<input type='checkbox' class='chkDevice' data-id='#= id #' />").Width(50);
+                            columns.Bound(p => p.name).Title("User Name");
+                            columns.ForeignKey(p => p.id_donvi, ViewBag.DonviList as SelectList, "Value", "Text").Title("Unit");
+                            columns.ForeignKey(p => p.id_phongban, ViewBag.PhongbanList as SelectList, "Value", "Text").Title("Department");
+                            columns.ForeignKey(p => p.id_thietbi, ViewBag.DeviceList as SelectList, "Value", "Text").Title("Device");
+                        })
+                        .Sortable()
+                        .Pageable(pageable => pageable
+                            .Refresh(true)
+                            .PageSizes(true)
+                            .ButtonCount(5))
+                        .Filterable(ftb => ftb.Mode(GridFilterMode.Row))
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .PageSize(10)
+                            .Read(read => read.Action("GetUsers", "Warranty").Data("filterSelectedIds"))
+                        )
+                    )
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    @(Html.Kendo().DropDownList()
+                        .Name("drlAction")
+                        .OptionLabel("Select Action")
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new SelectListItem { Text = "Warranty", Value = "Warranty" },
+                            new SelectListItem { Text = "Repair", Value = "Repair" }
+                        })
+                    )
+                </div>
+                <div class="col-md-3">
+                    <button id="sendButton" class="btn btn-primary">Send</button>
+                </div>
+            </div>
+
+            @*<table class="table">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>User Department</th>
+                        <th>Unit</th>
+                        <th>Device's Name</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="selectedDevicesInfo"></tbody>
+            </table>*@
+
+            <script>
+                function filterSelectedIds() {
+                    var savedData = localStorage.getItem("selectedDevicesInfo");
+                    if (savedData) {
+                        savedData = JSON.parse(savedData);
+                        return { selectedIds: savedData.devices.map(device => device.userId) };
+                    }
+                    return { selectedIds: [] };
+                }
+
+                document.getElementById("sendButton").addEventListener("click", function () {
+                    saveDataToLocalStorage();
+                    loadDataFromLocalStorage(); // Update the table immediately after saving
+                    refreshGrid();
+                    alert("Request has been sent successfully");
+                });
+
+                document.getElementById("clearButton").addEventListener("click", function () {
+                    clearLocalStorage();
+                    loadDataFromLocalStorage(); // Update the table immediately after clearing
+                    refreshGrid();
+                    alert("Local storage cleared and data reset.");
+                });
+
+                function saveDataToLocalStorage() {
+                    var selectedDevices = document.querySelectorAll(".chkDevice:checked");
+                    var action = document.getElementById("drlAction").value;
+
+                    var dataToSave = {
+                        devices: []
+                    };
+
+                    // Retrieve existing data
+                    var existingData = localStorage.getItem("selectedDevicesInfo");
+                    if (existingData) {
+                        existingData = JSON.parse(existingData);
+                        dataToSave.devices = existingData.devices;
+                    }
+
+                    selectedDevices.forEach(function (device) {
+                        var userRow = device.closest("tr");
+                        var userName = userRow.querySelector("td:nth-child(2)").innerText;
+                        var userDepartment = userRow.querySelector("td:nth-child(3)").innerText;
+                        var unit = userRow.querySelector("td:nth-child(4)").innerText;
+                        var deviceName = userRow.querySelector("td:nth-child(5)").innerText;
+                        var userId = device.getAttribute("data-id");
+
+                        // Check if the device is already in the list
+                        var existingDevice = dataToSave.devices.find(d => d.userId === userId);
+                        if (existingDevice) {
+                            // Update action for the existing device
+                            existingDevice.action = action;
+                        } else {
+                            // Add new device with the selected action
+                            dataToSave.devices.push({
+                                userName: userName,
+                                userDepartment: userDepartment,
+                                unit: unit,
+                                deviceName: deviceName,
+                                userId: userId,
+                                action: action // Set the action for the new device
+                            });
+                        }
+                    });
+
+                    localStorage.setItem("selectedDevicesInfo", JSON.stringify(dataToSave));
+                }
+
+                function loadDataFromLocalStorage() {
+                    var savedData = localStorage.getItem("selectedDevicesInfo");
+
+                    if (savedData) {
+                        savedData = JSON.parse(savedData);
+
+                        var selectedDevicesInfo = document.getElementById("selectedDevicesInfo");
+                        selectedDevicesInfo.innerHTML = "";
+
+                        savedData.devices.forEach(function (device) {
+                            var newRow = document.createElement("tr");
+                            newRow.innerHTML = "<td>" + device.userName + "</td><td>" + device.userDepartment + "</td><td>" + device.unit + "</td><td>" + device.deviceName + "</td><td>" + device.action + "</td>";
+                            selectedDevicesInfo.appendChild(newRow);
+                        });
+                    }
+                }
+
+                function clearLocalStorage() {
+                    localStorage.removeItem("selectedDevicesInfo");
+                }
+
+                function refreshGrid() {
+                    $("#grid").data("kendoGrid").dataSource.read();
+                    $("#grid").data("kendoGrid").refresh();
+                }
+
+                window.onload = loadDataFromLocalStorage;
+            </script>
+
+        </div>
+    </div>
+</div>

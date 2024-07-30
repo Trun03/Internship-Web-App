@@ -1,0 +1,851 @@
+﻿@using Kendo.Mvc;
+@{
+    ViewBag.Title = "Home";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@*REPAIR AND WARRANTY*@
+<div id="notificationIconWar" class="notification-IconWar">
+    <i class="fas fa-bell"></i>
+</div>
+<div id="notificationPanelIconWar" class="notification-IconWar">
+    <div id="notificationContentIconWar"></div>
+</div>
+<style>
+    /* Styling for the notification icon */
+    #notificationIconWar {
+        position: fixed;
+        top: 75px;
+        right: 10px;
+        background-color: #333;
+        color: white;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        z-index: 1001;
+    }
+
+        #notificationIconWar:hover {
+            background-color: #000000;
+        }
+
+    /* Styling for the notification panel */
+    #notificationPanelIconWar {
+        position: fixed;
+        top: 140px;
+        right: 10px;
+        width: 300px;
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+        z-index: 1000;
+    }
+
+    /* Styling for each notification */
+    #notificationContentIconWar div {
+        background-color: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 10px;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        color: #333;
+        transition: background-color 0.3s ease;
+    }
+
+        /* Hover effect for notifications */
+        #notificationContentIconWar div:hover {
+            background-color: #e9ecef;
+        }
+</style>
+
+
+
+@*BẢNG PRO*@
+<div class="container-fluid px-4">
+    <h1>Project</h1>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Pro
+            </div>
+            <div class="card-body">
+                <input id="projectSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+            <div class="card-body">
+                @(Html.Kendo().Grid<Model.EF.Pro>()
+                        .Name("gridPro") // Đảm bảo tên lưới đúng ở đây
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.id).Title("ID");
+                            columns.Bound(p => p.namepj).Title("Project name");
+                            columns.Bound(p => p.description).Title("Description");
+                            columns.Command(command =>
+                            {
+                                command.Edit();
+                                command.Destroy(); // Thêm hành động xóa
+                            }).Title("Actions").Width(200);
+                        })
+                        .Sortable()
+                        .Navigatable()
+                        .Filterable()
+                        .ToolBar(toolbar => toolbar.Create())
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Model(model =>
+                            {
+                                model.Id(p => p.id);
+                                model.Field(p => p.id).Editable(false);
+                            })
+                            .Create(create => create.Action("CreatePro", "Home"))
+                            .Read(read => read.Action("GetProData", "Home"))
+                            .Update(update => update.Action("UpdatePro", "Home"))
+                            .Destroy(destroy => destroy.Action("DeletePro", "Home"))
+                        )
+                    )
+
+            </div>
+
+            @*Dropdownlist Pro*@
+
+            <div class="card-body">
+                @(Html.Kendo().DropDownList()
+                    .Name("drlProject")
+                    .DataTextField("namepj")
+                    .DataValueField("id")
+                    .OptionLabel("Project's Dropdown List")
+                    .Events(e =>
+                    {
+                        e.Change("onProjectChange");
+                    })
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("PopulateProjectList", "Home");
+                        });
+                    })
+                )
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@*Bảng Gói Thầu*@
+
+
+<div class="container-fluid px-4">
+    <h1>Sub project and Device's list</h1>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="row-sm-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-table me-1"></i>
+                        Sub Pro
+                    </div>
+                    <div class="col-sm-6">
+                        <input id="subprojectSearchInput" class="form-control" type="text" placeholder="Search...">
+                    </div>
+                    <div class="card-body">
+                        @(Html.Kendo().Grid<Model.EF.SubProject>()
+                        .Name("gridsubPro")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.SubProjectID).Title("ID");
+                            columns.Bound(p => p.Idprj).Title("ID Project");
+                            columns.Bound(p => p.Name).Title("Sub Project name");
+                            columns.Bound(p => p.Description).Title("Description");
+                            columns.Command(command =>
+                            {
+                                command.Edit();
+                                command.Destroy();
+                            }).Title("Actions").Width(10);
+                        })
+                        .Sortable()
+                        .Navigatable()
+                        .Filterable()
+                        .ToolBar(toolbar => toolbar.Create())
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                        .Model(model =>
+                        {
+                            model.Id(p => p.SubProjectID);
+                            model.Field(p => p.SubProjectID).Editable(false);
+                        })
+                        .Create(create => create.Action("CreateSubProject", "Home"))
+                        .Read(read => read.Action("PopulateSuprobyID", "Home").Data("infoPro"))
+                        .Update(update => update.Action("UpdateSubProject", "Home"))
+                        .Destroy(destroy => destroy.Action("DeleteSubProject", "Home"))
+                        )
+                    )
+                    </div>
+
+                    @*Dropdowlist*@
+                    <div class="card-body">
+                        @(Html.Kendo().DropDownList()
+                            .Name("drlSubproject")
+                            .DataTextField("Name")
+                            .DataValueField("SubProjectID")
+                            .OptionLabel("Tên Subproject")
+                            .Events(e =>
+                             {
+                                 e.Change("onChange");;
+                             })
+                            .DataSource(source =>
+                            {
+                                source.Read(read =>
+                                {
+                                    read.Action("PopulateSubprojectList", "Home");
+                                });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @*BẢNG THIẾT BỊ*@
+        <div class="col-sm-6">
+            <div class="row-sm-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <i class="fas fa-table me-1"></i>
+                        Dev
+                    </div>
+                    <div class="card-body">
+                        <input id="DeviceSearchInput" class="form-control" type="text" placeholder="Search...">
+                    </div>
+                    <div class="card-body">
+
+                        @(Html.Kendo().Grid<Model.EF.Device>()
+                                .Name("gridDevice")
+                                .Columns(columns =>
+                                {
+                                    columns.Bound(p => p.DeviceID).Title("ID");
+                                    columns.Bound(p => p.SubProjectID).Title("ID Sub Project");
+                                    columns.Bound(p => p.Name).Title("Device Name");
+                                    columns.Bound(p => p.Description).Title("Description");
+                                    columns.Bound(p => p.Serial).Title("Serial Number");
+                                    columns.Bound(p => p.Model).Title("Model");
+                                    columns.Bound(p => p.Status).Title("Status").EditorTemplateName("StatusDropDown");
+                                    columns.Command(command =>
+                                    {
+                                        command.Edit();
+                                        command.Destroy();
+                                    }).Title("Actions").Width(20);
+                                })
+                                .Sortable()
+                                .Navigatable()
+                                .Filterable()
+                                .ToolBar(toolbar => toolbar.Create())
+                                .DataSource(dataSource => dataSource
+                                    .Ajax()
+                                    .Model(model =>
+                                    {
+                                        model.Id(p => p.DeviceID);
+                                        model.Field(p => p.DeviceID).Editable(false);
+                                    })
+                                    .Create(create => create.Action("CreateDevice", "Home"))
+                                    .Update(update => update.Action("UpdateDevice", "Home"))
+                                    .Read(read => read.Action("PopulateDevicebyID", "Home").Data("info"))
+                                    .Destroy(destroy => destroy.Action("DeleteDevice", "Home"))
+                                )
+                            )
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        @*BẢNG CẤU HÌNH*@
+        <div class="container-fluid px-4">
+            <h1>Configuration</h1>
+            @*Dropdownlist*@
+            <div class="card-body">
+                @(Html.Kendo().DropDownList()
+         .Name("drlDevice")
+         .DataTextField("Name")
+         .DataValueField("DeviceID")
+         .OptionLabel("Device's dropdownlist")
+         .Events(e =>
+          {
+              e.Change("onDeviceChange");;
+          })
+         .DataSource(source =>
+         {
+             source.Read(read =>
+             {
+                 read.Action("PopulateDeviceList", "Home");
+             });
+         })
+     )
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-table me-1"></i>
+                            Config
+                        </div>
+                        <div class="card-body">
+                            <input id="CauhinhSearchInput" class="form-control" type="text" placeholder="Search...">
+                        </div>
+                        <div class="card-body">
+                            @(Html.Kendo().Grid<Model.EF.Cauhinh>()
+                        .Name("gridCauHinh")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(p => p.id).Title("ID");
+                            columns.Bound(p => p.id_Device).Title("ID Device");
+                            columns.Bound(p => p.Chip).Title("Chip");
+                            columns.Bound(p => p.RAM).Title("RAM");
+                            columns.Bound(p => p.HDD).Title("HDD");
+                            columns.Bound(p => p.SSD).Title("SSD");
+                            columns.Bound(p => p.Main).Title("Main");
+                            columns.Bound(p => p.description).Title("Description");
+                            columns.Command(command =>
+                            {
+                                command.Edit();
+                                command.Destroy();
+                            }).Title("Actions").Width(200);
+                        })
+                        .Sortable()
+                        .Navigatable()
+                        .Filterable()
+                        .Editable(editable => editable.Mode(GridEditMode.PopUp))
+                        .ToolBar(toolbar => toolbar.Create())
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Model(model =>
+                            {
+                                model.Id(p => p.id);
+                                model.Field(p => p.id).Editable(false);
+                            })
+                            .Create(create => create.Action("CreateCauHinh", "Home"))
+                            .Read(read => read.Action("PopulateCauhinhbyID", "Home").Data("infoDevice"))
+                            .Update(update => update.Action("UpdateCauHinh", "Home"))
+                            .Destroy(destroy => destroy.Action("DeleteCauHinh", "Home"))
+                        )
+                    )
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jszip/2.4.0/jszip.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+            });
+
+            /*Subpro*/
+            function onChange() {
+                $("#gridDevice").data("kendoGrid").dataSource.read();
+            }
+            function info() {
+                var tempval = $("#drlSubproject").data("kendoDropDownList").value();
+                return {
+                    subProjectID: tempval
+                }
+            }
+
+            /*Pro*/
+            function onProjectChange() {
+                $("#gridsubPro").data("kendoGrid").dataSource.read();
+            }
+            function infoPro() {
+                var tempval = $("#drlProject").data("kendoDropDownList").value();
+                return {
+                    proID: tempval
+                }
+            }
+
+
+            /*Thiết bị*/
+
+            function onDeviceChange() {
+                $("#gridCauHinh").data("kendoGrid").dataSource.read();
+            }
+            function infoDevice() {
+                var tempval = $("#drlDevice").data("kendoDropDownList").value();
+                return {
+                    deviceID: tempval
+                }
+            }
+
+        </script>
+
+
+        @*SearchbarPro*@
+
+        <script type="text/javascript">
+    $(document).ready(function () {
+        $("#projectSearchInput").on("keyup", function () {
+            var searchText = $(this).val();
+            searchProject(searchText);
+        });
+    });
+
+    function searchProject(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchProject", "Home")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#gridPro").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching projects: " + error);
+            }
+        });
+    }
+        </script>
+
+
+        @*Searchbar Gói thầu*@
+        <script type="text/javascript">
+    $(document).ready(function () {
+        $("#subprojectSearchInput").on("keyup", function () {
+            var searchText = $(this).val();
+            searchSubProject(searchText);
+        });
+    });
+
+    function searchSubProject(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchSubProject", "Home")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#gridsubPro").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching subprojects: " + error);
+            }
+        });
+    }
+        </script>
+
+
+
+        @*Searchbar Thiết bị*@
+        <script type="text/javascript">
+    $(document).ready(function () {
+        $("#DeviceSearchInput").on("keyup", function () {
+            var searchText = $(this).val();
+            searchDevices(searchText);
+        });
+    });
+
+    function searchDevices(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchDevices", "Home")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#gridDevice").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching devices: " + error);
+            }
+        });
+    }
+        </script>
+
+
+        @*Searchbar Cấu hình*@
+        <script type="text/javascript">
+    $(document).ready(function () {
+        $("#CauhinhSearchInput").on("keyup", function () {
+            var searchText = $(this).val();
+            searchCauHinh(searchText);
+        });
+    });
+
+    function searchCauHinh(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchCauHinh", "Home")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#gridCauHinh").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching cauhinhs: " + error);
+            }
+        });
+    }
+        </script>
+
+
+        <style>
+            /* CSS cho các tiêu đề */
+            h1 {
+                font-size: 36px;
+                color: #333;
+                margin-bottom: 20px;
+            }
+
+            /* CSS cho card */
+            .card {
+                border: 1px solid #434343; /* Màu xám đậm */
+                border-radius: 10px;
+                background-color: #4d4d4d; /* Màu xám đậm */
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                margin-bottom: 20px;
+            }
+
+            .card-header {
+                background-color: #333; /* Màu xám đậm */
+                color: #fff;
+                padding: 15px;
+                border-top-left-radius: 10px;
+                border-top-right-radius: 10px;
+            }
+
+            .card-body {
+                padding: 20px;
+            }
+
+            /* CSS cho input */
+            .form-control {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #434343; /* Màu xám đậm */
+                border-radius: 5px;
+                margin-bottom: 15px;
+            }
+
+            /* CSS cho button */
+            .btn {
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .btn-primary {
+                background-color: #333; /* Màu xám đậm */
+                color: #fff;
+            }
+
+            .btn-danger {
+                background-color: #9e9e9e; /* Màu xám đậm nhạt */
+                color: #fff;
+            }
+
+            /* CSS cho dropdown */
+            .k-dropdown {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #434343; /* Màu xám đậm */
+                border-radius: 5px;
+                margin-bottom: 15px;
+            }
+
+            /* CSS cho bảng */
+            .k-grid {
+                border-collapse: collapse;
+                width: 100%;
+            }
+
+                .k-grid th,
+                .k-grid td {
+                    padding: 10px;
+                    border: 1px solid #434343; /* Màu xám đậm */
+                    color: #fff; /* Màu chữ trắng */
+                }
+
+                .k-grid th {
+                    background-color: #434343; /* Màu xám đậm */
+                }
+
+            .k-grid-header th.k-header > .k-link {
+                display: block;
+                min-height: 18px;
+                line-height: 18px;
+                margin: -.5em -.6em -.4em 0;
+                padding: .5em .6em .4em 0;
+                overflow: hidden;
+                color: white;
+                text-overflow: ellipsis;
+            }
+
+            /* CSS cho các nút trong bảng */
+            .k-grid .k-button {
+                padding: 8px 15px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                margin-right: 5px;
+            }
+
+            .k-grid .k-button-primary {
+                background-color: #333; /* Màu xám đậm */
+                color: #fff;
+            }
+
+            .k-grid .k-button-danger {
+                background-color: #9e9e9e; /* Màu xám đậm nhạt */
+                color: #fff;
+            }
+
+            /* CSS cho khung chứa các nút trong bảng */
+            .k-grid-toolbar {
+                margin-bottom: 20px;
+            }
+
+
+            /* CSS cho nút tạo mới */
+            .create-button {
+                margin-bottom: 20px;
+            }
+
+            /* CSS cho khung của các bảng */
+            .card {
+                border: 1px solid #dee2e6;
+                border-radius: 5px;
+                margin-bottom: 20px;
+                overflow: hidden; /* Giữ nội dung bên trong phần giới hạn */
+            }
+
+            .card-body {
+                padding: 20px;
+                overflow-x: auto; /* Tạo thanh cuộn ngang khi cần thiết */
+            }
+
+            /* CSS cho bảng */
+            .k-grid {
+                border-collapse: collapse;
+                width: 100%;
+                overflow: auto; /* Tạo thanh cuộn ngang khi bảng tràn ra */
+            }
+
+                .k-grid th,
+                .k-grid td {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    white-space: nowrap; /* Ngăn ngừa trống kế thừa từ tràn ra */
+                }
+
+                /* CSS cho các nút trong bảng */
+                .k-grid .k-button {
+                    padding: 8px 15px;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    margin-right: 5px;
+                }
+
+            /* CSS cho khung chứa các nút trong bảng */
+            .k-grid-toolbar {
+                margin-bottom: 20px;
+            }
+
+
+            /* CSS cho các tiêu đề của bảng */
+            .k-grid th {
+                color: #fff; /* Đặt màu chữ của tiêu đề là trắng */
+            }
+
+            /* CSS cho dữ liệu trong bảng */
+            .k-grid td {
+                color: #000; /* Đặt màu chữ của dữ liệu là màu đen */
+            }
+        </style>
+
+        @*Mail Icon*@
+        <div id="notificationdistribute" class="notificationdistribute">
+            <i class="fas fa-envelope"></i>
+        </div>
+
+        <div id="notificationPaneldistribute" class="notification-distribute">
+            <ul id="notificationList"></ul>
+        </div>
+
+        <script>
+            $(document).ready(function () {
+                displayNotifications();
+
+                $("#sendButton").on("click", function () {
+                    var selectedDevices = [];
+                    $(".chkDevice:checked").each(function () {
+                        var id = $(this).data("id");
+                        var name = $(this).data("name");
+                        var serial = $(this).data("serial");
+                        selectedDevices.push({ id: id, name: name, serial: serial });
+                    });
+
+                    var project = $("#drlProject").data("kendoDropDownList").text();
+                    var subProject = $("#drlSubproject").data("kendoDropDownList").text();
+
+                    var distributeNotifications = localStorage.getItem("distributeNotifications") || "";
+                    selectedDevices.forEach(function (device) {
+                        distributeNotifications += device.name + ", Serial number: " + device.serial + ", Project: " + project + ", SubProject: " + subProject + "|";
+                    });
+
+                    localStorage.setItem("distributeNotifications", distributeNotifications);
+                    displayNotifications();
+                });
+
+                $("#notificationdistribute").on("click", function () {
+                    $("#notificationPaneldistribute").toggle();
+                });
+
+                $("#notificationIconWar").on("click", function () {
+                    $("#notificationPanelIconWar").toggle();
+                });
+
+
+                function displayNotifications() {
+                    var distributeNotifications = localStorage.getItem("distributeNotifications") || "";
+                    var notificationList = $("#notificationList");
+                    notificationList.empty();
+
+                    if (distributeNotifications) {
+                        var notificationArray = distributeNotifications.split("|");
+                        notificationArray.forEach(function (message) {
+                            if (message) {
+                                notificationList.append("<li>" + message + "</li>");
+                            }
+                        });
+                    }
+                }
+            });
+
+        </script>
+        <style>
+            /* Phần notificationorder */
+            #notificationdistribute {
+                font-size: 58px;
+                color: #434343;
+                position: fixed;
+                bottom: 800px;
+                left: 1700px;
+            }
+
+            /* Phần notificationPanelOrder */
+            #notificationPaneldistribute {
+                position: fixed;
+                top: 60px;
+                left: 1400px;
+                z-index: 1000;
+                background-color: #fff; /* Màu nền */
+                border: 1px solid #ddd; /* Viền */
+                border-radius: 5px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Hiệu ứng bóng */
+                max-width: 300px;
+                height: 100px;
+                overflow-y: auto;
+            }
+
+                #notificationPaneldistribute ul {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                    #notificationPaneldistribute ul li {
+                        padding: 10px;
+                        border-bottom: 1px solid #ddd; /* Viền phân chia giữa các thông báo */
+                    }
+
+                        #notificationPaneldistribute ul li:last-child {
+                            border-bottom: none; /* Loại bỏ viền ở phần tử cuối cùng */
+                        }
+
+                        #notificationPaneldistribute ul li i {
+                            margin-right: 10px; /* Khoảng cách giữa biểu tượng và nội dung của thông báo */
+                            font-size: 20px; /* Kích thước biểu tượng */
+                            color: #555; /* Màu của biểu tượng */
+                        }
+        </style>
+
+        @*Warranty and Repair*@
+        <script>
+            function loadNotifications() {
+                var notificationContentIconWar = document.getElementById("notificationContentIconWar");
+                var warandRe = localStorage.getItem("WarandRe");
+
+                if (warandRe) {
+                    warandRe = JSON.parse(warandRe);
+
+                    warandRe.forEach(function (notification) {
+                        var newNotification = document.createElement("div");
+                        newNotification.textContent = notification;
+                        notificationContentIconWar.appendChild(newNotification);
+                    });
+                }
+            }
+
+            window.onload = function () {
+                loadNotifications();
+                loadDataFromLocalStorage();
+            };
+
+            document.getElementById("clearButton").addEventListener("click", function () {
+                clearLocalStorage();
+                loadDataFromLocalStorage(); // Update the table immediately after clearing
+                alert("Local storage cleared and data reset.");
+            });
+
+            function loadDataFromLocalStorage() {
+                var savedData = localStorage.getItem("selectedDevicesInfo");
+
+                if (savedData) {
+                    savedData = JSON.parse(savedData);
+
+                    var selectedDevicesInfo = document.getElementById("selectedDevicesInfo");
+                    selectedDevicesInfo.innerHTML = "";
+
+                    savedData.devices.forEach(function (device) {
+                        if (device.action === "Repair") { // Filter condition
+                            var newRow = document.createElement("tr");
+                            newRow.innerHTML = "<td>" + device.userName + "</td><td>" + device.userDepartment + "</td><td>" + device.unit + "</td><td>" + device.deviceName + "</td><td>" + device.action + "</td><td><button onclick='sendRepairNotification(\"" + device.deviceName + "\")'>Send</button></td>";
+                            selectedDevicesInfo.appendChild(newRow);
+                        }
+                    });
+                }
+            }
+
+            function sendRepairNotification(deviceName) {
+                var notificationMessage = "Device " + deviceName + " is being repaired.";
+
+                // Save the notification to local storage
+                var warandRe = localStorage.getItem("WarandRe") || [];
+                if (typeof warandRe === "string") {
+                    warandRe = JSON.parse(warandRe);
+                }
+                warandRe.push(notificationMessage);
+                localStorage.setItem("WarandRe", JSON.stringify(warandRe));
+            }
+
+            function clearLocalStorage() {
+                localStorage.removeItem("selectedDevicesInfo");
+                localStorage.removeItem("WarandRe");
+            }
+
+
+        </script>
+

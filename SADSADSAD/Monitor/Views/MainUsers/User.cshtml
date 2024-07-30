@@ -1,0 +1,321 @@
+﻿@using Kendo.Mvc;
+@using Kendo.Mvc;
+@model int?
+@{
+    ViewBag.Title = "User";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid px-4">
+    <h1>User's list</h1>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                User
+            </div>
+            <div class="card-body">
+                <input id="UserSearchInput" class="form-control" type="text" placeholder="Search...">
+            </div>
+
+            <div class="card-body">
+                <!-- DropDownList cho Unit -->
+                @(Html.Kendo().DropDownList()
+                    .Name("drlUnit")
+                    .DataTextField("name")
+                    .DataValueField("id")
+                    .OptionLabel("Unit's Dropdown List")
+                    .Events(e =>
+                    {
+                        e.Change("onUnitChange");
+                    })
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("PopulateUnitList", "Users");
+                        });
+                    })
+                )
+            </div>
+
+            <div class="card-body">
+                <!-- DropDownList cho Department -->
+                @(Html.Kendo().DropDownList()
+                    .Name("drlPB")
+                    .DataTextField("name")
+                    .DataValueField("id")
+                    .OptionLabel("Department's Dropdown List")
+                    .Events(e =>
+                    {
+                        e.Change("onDepartChange");
+                    })
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("PopulateDepartList", "Users");
+                        });
+                    })
+                )
+            </div>
+
+            <div class="card-body">
+                <!-- DropDownList cho User -->
+                @(Html.Kendo().DropDownList()
+                    .Name("drlUser")
+                    .DataTextField("name")
+                    .DataValueField("id")
+                    .OptionLabel("User's name")
+                    .Events(e =>
+                    {
+                        e.Change("onUserChange");
+                    })
+                    .DataSource(source =>
+                    {
+                        source.Read(read =>
+                        {
+                            read.Action("PopulateUserList", "MainUsers");
+                        });
+                    })
+                )
+            </div>
+
+            <div class="card-body">
+                <!-- Grid hiển thị danh sách User -->
+                @(Html.Kendo().Grid<Model.EF.User>()
+                    .Name("griUser")
+                    .Columns(columns =>
+                    {
+                        columns.Bound(p => p.id).Title("ID");
+                        columns.Bound(p => p.id_donvi).Title("Unit's ID");
+                        // Thay thế cột Department's ID bằng DropDownList
+                        columns.Bound(p => p.id_phongban).Title("Department's ID");
+
+                        columns.Bound(p => p.id_thietbi).Title("Device's ID");
+                        columns.Bound(p => p.name).Title("User's name");
+                        columns.Bound(p => p.StartBorrowingDate).Title("Start Borrowing Date").Format("{0:yyyy-MM-dd}");
+                        columns.Command(command =>
+                        {
+                            command.Edit();
+                            command.Destroy();
+                            command.Custom("sendToStorage").Text("Send to Admin");
+                        }).Title("Actions").Width(400);
+                    })
+                    .Sortable()
+                    .Navigatable()
+                    .Filterable()
+                    .ToolBar(toolbar => toolbar.Create())
+                    .DataSource(dataSource => dataSource
+                        .Ajax()
+                        .Model(model =>
+                        {
+                            model.Id(p => p.id);
+                            model.Field(p => p.id).Editable(false);
+                        })
+                        .Create(create => create.Action("AddUser", "MainUsers"))
+                        .Read(read => read.Action("PopulateUserbyID", "MainUsers").Data("infoDepart"))
+                        .Update(update => update.Action("UpdateUser", "MainUsers"))
+                        .Destroy(destroy => destroy.Action("DeleteUser", "MainUsers"))
+                        .Events(events => events.Error("onError"))
+                    )
+                )
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function onError(e) {
+        if (e.errors) {
+            var message = "Errors:\n";
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    message += value.errors.join("\n") + "\n";
+                }
+            });
+            alert(message);
+        }
+    }
+</script>
+
+<script>
+    function onDepartChange() {
+        $("#griUser").data("kendoGrid").dataSource.read();
+    }
+
+    function onUnitChange() {
+        $("#griUser").data("kendoGrid").dataSource.read();
+    }
+
+    function infoDepart() {
+        var tempval = $("#drlPB").data("kendoDropDownList").value();
+        var tempval = $("#drlUnit").data("kendoDropDownList").value();
+        return {
+            DepartID: tempval,
+            UnitID: tempval
+        };
+    }
+
+    function onUserChange() {
+        var selectedUserId = $("#drlUser").data("kendoDropDownList").value();
+        $.ajax({
+            url: '@Url.Action("PopulateUserInfo", "MainUsers")',
+            type: 'GET',
+            dataType: 'json',
+            data: { userId: selectedUserId },
+            success: function (user) {
+                var grid = $("#griUser").data("kendoGrid");
+                grid.dataSource.data([user]);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error fetching user data: " + error);
+            }
+        });
+    }
+
+
+    function searchUser(searchText) {
+        $.ajax({
+            url: '@Url.Action("SearchUser", "MainUsers")',
+            type: 'POST',
+            dataType: 'json',
+            data: { searchText: searchText },
+            success: function (result) {
+                $("#griUser").data("kendoGrid").dataSource.data(result);
+            },
+            error: function (xhr, status, error) {
+                console.log("Error searching users: " + error);
+            }
+        });
+    }
+
+    $(document).ready(function () {
+        var isNotificationPanelVisible = false;
+
+        // Hiển thị thông báo từ LocalStorage
+        var storedNotifications = JSON.parse(localStorage.getItem("Store")) || [];
+        if (storedNotifications.length > 0) {
+            displayNotifications(storedNotifications);
+        }
+
+        // Sự kiện khi nhấn nút "Send to Storage Department"
+        $("#griUser").on("click", ".k-grid-sendToStorage", function (e) {
+            e.preventDefault();
+
+            var grid = $("#griUser").data("kendoGrid");
+            var dataItem = grid.dataItem($(e.currentTarget).closest("tr"));
+
+            var deviceId = dataItem.id_thietbi;
+            var userName = dataItem.name;
+            var notification = `Device ID: ${deviceId} has been sent to User: ${userName}`;
+
+            // Lấy danh sách thông báo từ LocalStorage (nếu có)
+            var storedNotifications = JSON.parse(localStorage.getItem("Store")) || [];
+            // Thêm thông báo mới vào mảng
+            storedNotifications.push(notification);
+            // Lưu lại danh sách thông báo vào LocalStorage
+            localStorage.setItem("Store", JSON.stringify(storedNotifications));
+
+            // Hiển thị tất cả thông báo
+            displayNotifications(storedNotifications);
+        });
+
+        // Sự kiện click vào notificationStorage
+        $("#notificationStorage").click(function () {
+            toggleNotificationPanel();
+        });
+
+        // Hàm hiển thị/toggle panel thông báo
+        function toggleNotificationPanel() {
+            if (isNotificationPanelVisible) {
+                $("#notificationPanelStore").hide();
+            } else {
+                $("#notificationPanelStore").show();
+            }
+            isNotificationPanelVisible = !isNotificationPanelVisible;
+        }
+
+        // Hàm hiển thị tất cả thông báo
+        function displayNotifications(notifications) {
+            var notificationHtml = notifications.map(notification => `<div>${notification}</div>`).join("");
+            $("#notificationContentstorage").html(notificationHtml);
+            $("#notificationPanelStore").show();
+            isNotificationPanelVisible = true;
+        }
+    });
+</script>
+
+<style>
+    .k-grid-header th.k-header > .k-link {
+        display: block;
+        min-height: 18px;
+        line-height: 18px;
+        margin: -.5em -.6em -.4em 0;
+        padding: .5em .6em .4em 0;
+        overflow: hidden;
+        color: white;
+        text-overflow: ellipsis;
+    }
+
+    .card {
+        border: 1px solid #434343;
+        border-radius: 10px;
+        background-color: #4d4d4d;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        background-color: #333;
+        color: #fff;
+        padding: 15px;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #434343;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    .k-dropdown {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #434343;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+
+    .k-grid {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+        .k-grid th,
+        .k-grid td {
+            padding: 10px;
+            border: 1px solid #434343;
+            color: #000;
+        }
+
+        .k-grid th {
+            background-color: #434343;
+        }
+
+    .k-grid-toolbar {
+        margin-bottom: 20px;
+    }
+</style>
+
+
+
